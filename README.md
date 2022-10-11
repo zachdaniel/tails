@@ -1,21 +1,8 @@
 # Tails
 
-**TODO: Add description**
+Tails is a small set of utilities around working with tailwind class lists in Elixir. 
+
 
 ## Installation
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `tails` to your list of dependencies in `mix.exs`:
-
-```elixir
-def deps do
-  [
-    {:tails, "~> 0.1.0"}
-  ]
-end
-```
-
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at <https://hexdocs.pm/tails>.
-
+This package is currently only available on github, as it is still experimental. 

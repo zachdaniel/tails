@@ -18,6 +18,7 @@ defmodule Tails do
              @external_resource @colors_file
 
              @colors_file
+             |> Path.expand()
              |> File.read!()
              |> Jason.decode!()
            else
@@ -45,7 +46,42 @@ defmodule Tails do
           w: String.t()
         }
 
-  def new(classes) do
+  def classes(nil), do: nil
+
+  def classes(classes) when is_list(classes) do
+    classes
+    |> Enum.filter(fn
+      {_classes, condition} ->
+        condition
+
+      _ ->
+        true
+    end)
+    |> Enum.map(fn
+      {classes, _} ->
+        to_string(classes)
+
+      classes ->
+        to_string(classes)
+    end)
+    |> case do
+      [classes] ->
+        classes(classes)
+
+      [classes | rest] ->
+        rest
+        |> Enum.reduce(classes, &merge(&2, &1))
+        |> to_string()
+    end
+  end
+
+  def classes(classes) when is_binary(classes) do
+    classes
+    |> new()
+    |> to_string()
+  end
+
+  defp new(classes) do
     merge(%__MODULE__{}, classes)
   end
 
@@ -65,6 +101,17 @@ defmodule Tails do
       iex> merge("font-normal text-black hover:text-primary-light-300", "text-primary-600 dark:text-primary-dark-400 font-bold") |> to_string()
       "font-bold text-primary-600 dark:text-primary-dark-400 hover:text-primary-light-300"
   """
+  def merge(tailwind, nil) when is_binary(tailwind), do: new(tailwind)
+  def merge(%__MODULE__{} = tailwind, nil), do: new(tailwind)
+
+  def merge(tailwind, classes) when is_list(tailwind) do
+    merge(classes(tailwind), classes)
+  end
+
+  def merge(tailwind, classes) when is_list(classes) do
+    merge(tailwind, classes(classes))
+  end
+
   def merge(tailwind, classes) when is_binary(tailwind) do
     merge(new(tailwind), classes)
   end
@@ -81,6 +128,10 @@ defmodule Tails do
 
   def merge(_tailwind, value) do
     raise "Cannot merge #{inspect(value)}"
+  end
+
+  def merge(list) when is_list(list) do
+    Enum.reduce(list, &merge(&2, &1))
   end
 
   @directional ~w(p m)a
@@ -272,7 +323,7 @@ defmodule Tails do
 
   defimpl Inspect do
     def inspect(tailwind, _opts) do
-      "Tails.new(\"#{to_string(tailwind)}\")"
+      "Tails.classes(\"#{to_string(tailwind)}\")"
     end
   end
 
