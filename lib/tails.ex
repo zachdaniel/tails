@@ -7,6 +7,8 @@ defmodule Tails do
     :font_style,
     :bg,
     :text,
+    :display,
+    :position,
     classes: MapSet.new(),
     variants: %{},
     variant: nil
@@ -98,6 +100,8 @@ defmodule Tails do
       "px-2 py-4"
       iex> merge("font-bold", "font-thin") |> to_string()
       "font-thin"
+      iex> merge("block absolute", "fixed hidden") |> to_string()
+      "hidden fixed"
       iex> merge("font-normal text-black hover:text-primary-light-300", "text-primary-600 dark:text-primary-dark-400 font-bold") |> to_string()
       "font-bold text-primary-600 dark:text-primary-dark-400 hover:text-primary-light-300"
   """
@@ -134,9 +138,30 @@ defmodule Tails do
     Enum.reduce(list, &merge(&2, &1))
   end
 
-  @directional ~w(p m)a
   @font_weights ~w(thin extralight light normal medium semibold bold extrabold black)
   @font_styles ~w(thin extralight light normal medium semibold bold extrabold black)
+  @positions ~w(static fixed absolute relative sticky)
+  @display ~w(
+    block inline-block inline flex inline-flex table inline-table table-caption table-cell
+    table-column table-column-group table-footer-group table-header-group table-row-group
+    table-row flow-root grid inline-grid contents list-item hidden)
+
+  @prefixed_with_values [
+    font_weight: %{values: @font_weights, prefix: "font-"},
+    font_styles: %{values: @font_styles, prefix: "font-"}
+  ]
+
+  @with_values [
+    position: %{values: @positions},
+    display: %{values: @display}
+  ]
+
+  @prefixed [
+    bg: %{prefix: "bg-"},
+    text: %{prefix: "text-"}
+  ]
+
+  @directional ~w(p m)a
 
   @modifiers ~w(
     hover focus focus-within focus-visible active visited target first last only odd
@@ -206,20 +231,22 @@ defmodule Tails do
     end
   end
 
-  def merge_class(tailwind, "font-" <> other_weight) when other_weight in @font_weights do
-    %{tailwind | font_weight: other_weight}
+  for {key, %{values: values, prefix: prefix}} <- @prefixed_with_values do
+    def merge_class(tailwind, unquote(prefix) <> new_value) when new_value in unquote(values) do
+      Map.put(tailwind, unquote(key), new_value)
+    end
   end
 
-  def merge_class(tailwind, "font-" <> other_family) when other_family in @font_styles do
-    %{tailwind | font_style: other_family}
+  for {key, %{values: values}} <- @with_values do
+    def merge_class(tailwind, new_value) when new_value in unquote(values) do
+      Map.put(tailwind, unquote(key), new_value)
+    end
   end
 
-  def merge_class(tailwind, "bg-" <> color) do
-    %{tailwind | bg: color}
-  end
-
-  def merge_class(tailwind, "text-" <> color) do
-    %{tailwind | text: color}
+  for {key, %{prefix: prefix}} <- @prefixed do
+    def merge_class(tailwind, unquote(prefix) <> new_value) do
+      Map.put(tailwind, unquote(key), new_value)
+    end
   end
 
   def merge_class(tailwind, class) do
@@ -239,6 +266,8 @@ defmodule Tails do
 
     defp to_iodata(tailwind) do
       [
+        simple(tailwind.display, tailwind.variant),
+        simple(tailwind.position, tailwind.variant),
         directional(tailwind.p, "p", tailwind.variant),
         directional(tailwind.m, "m", tailwind.variant),
         prefix("font", tailwind.font_weight, tailwind.variant),
@@ -285,6 +314,10 @@ defmodule Tails do
         end
       )
     end
+
+    defp simple(nil, _), do: ""
+    defp simple(value, nil), do: [" ", value]
+    defp simple(value, variant), do: [" ", variant, ":", value]
 
     defp prefix(_prefix, nil, _), do: ""
     defp prefix(prefix, value, nil), do: [" ", prefix, "-", value]
