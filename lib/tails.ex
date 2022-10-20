@@ -7,6 +7,8 @@ defmodule Tails do
     :font_style,
     :bg,
     :text,
+    :grid_cols,
+    :grid_rows,
     :display,
     :position,
     classes: MapSet.new(),
@@ -102,6 +104,8 @@ defmodule Tails do
       "font-thin"
       iex> merge("block absolute", "fixed hidden") |> to_string()
       "hidden fixed"
+      iex> merge("grid grid-cols-2 lg:grid-cols-3", "grid-cols-3 lg:grid-cols-4") |> to_string()
+      "grid grid-cols-3 lg:grid-cols-4"
       iex> merge("font-normal text-black hover:text-primary-light-300", "text-primary-600 dark:text-primary-dark-400 font-bold") |> to_string()
       "font-bold text-primary-600 dark:text-primary-dark-400 hover:text-primary-light-300"
   """
@@ -158,8 +162,10 @@ defmodule Tails do
 
   @prefixed [
     bg: %{prefix: "bg-"},
-    text: %{prefix: "text-"}
-  ]
+    text: %{prefix: "text-"},
+    grid_cols: %{prefix: "grid-cols-"},
+    grid_rows: %{prefix: "grid-rows-"}
+]
 
   @directional ~w(p m)a
 
@@ -273,7 +279,9 @@ defmodule Tails do
         prefix("font", tailwind.font_weight, tailwind.variant),
         prefix("font", tailwind.font_style, tailwind.variant),
         prefix("bg", tailwind.bg, tailwind.variant),
-        prefix("text", tailwind.text, tailwind.variant)
+        prefix("text", tailwind.text, tailwind.variant),
+        prefix("grid-cols", tailwind.grid_cols, tailwind.variant),
+        prefix("grid-rows", tailwind.grid_rows, tailwind.variant),
       ]
       |> add_variants(tailwind)
       |> add_classes(tailwind, tailwind.variant)
