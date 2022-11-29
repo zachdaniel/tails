@@ -335,7 +335,7 @@ defmodule Tails do
 
     def merge_class(
           %{unquote(class) => %Directions{} = directions} = tailwind,
-          unquote(string_class) <> "x" <> value
+          unquote(string_class) <> "x-" <> value
         ) do
       Map.put(tailwind, unquote(class), %{directions | x: value, l: nil, r: nil})
     end
