@@ -35,9 +35,10 @@ iex> merge("font-normal text-black hover:text-primary-light-300", "text-primary-
 "font-bold text-primary-600 dark:text-primary-dark-400 hover:text-primary-light-300"
 ```
 
-### WARNING
+This merge is a "allow-list" style merge, meaning classes that we haven't thought about and/or aren't aware of a good merge strategy are just added to the end of the class list.
+There are tons of class combinations that could potentially be intelligently merged, so if you spot one that should be added just let us know!
 
-This is still highly experimental, and merge only knows about a few basic tailwind classes. The idea here is that we can expand what `Tails` knows about over time.
+See the module docs for `Tails` to see what we currently handle
 
 ## Colors
 
