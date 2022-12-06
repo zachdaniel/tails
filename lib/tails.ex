@@ -1,6 +1,7 @@
 defmodule Tails do
   @colors_file Application.compile_env(:tails, :colors_file)
   @no_merge_classes Application.compile_env(:tails, :no_merge_classes) || []
+  @optimize_directions Application.compile_env(:tails, :optimize_directions?)
 
   @colors (if @colors_file do
              @external_resource @colors_file
@@ -78,6 +79,19 @@ defmodule Tails do
   In some cases, we merge anything starting with a given prefix. Eventually,
   we will have tools to read your tailwind config to determine additional classes
   to merge, or have explicit configuration on additional merge logic.
+
+  The preferred way to use tails classes the `classes/1` function. This gives you:
+
+  1. conditional classes
+  2. list merging (from left to right)
+  3. arbitrary nesting
+
+  For example:
+
+  `classes(["mt-1 mx-2", ["pt-2": var1, "pb-4", var2], "mt-12": var3])`
+
+  Will merge all classes from left to right, flattening the lists and conditionally
+  including the classes where the associated value is true.
 
   ## What classes are currently merged?
 
@@ -227,6 +241,10 @@ defmodule Tails do
       "bg-auto bg-repeat-x"
       iex> merge("bg-blue-500", "bg-red-400") |> to_string()
       "bg-red-400"
+      iex> merge("mt-1", "-mt-1") |> to_string()
+      "-mt-1"
+      iex> merge("-mt-1", "-mb-1") |> to_string()
+      "-my-1" # this only happens if `optimize_directions` is set to `true`
       iex> merge("grid grid-cols-2 lg:grid-cols-3", "grid-cols-3 lg:grid-cols-4") |> to_string()
       "grid grid-cols-3 lg:grid-cols-4"
       iex> merge("font-normal text-black hover:text-primary-light-300", "text-primary-600 dark:text-primary-dark-400 font-bold") |> to_string()
@@ -320,12 +338,31 @@ defmodule Tails do
   end
 
   for {class, %{prefix: string_class}} <- @directional do
+    def merge_class(tailwind, "-" <> unquote(string_class) <> "-" <> value) do
+      Map.put(tailwind, unquote(class), "-#{value}")
+    end
+
     def merge_class(tailwind, unquote(string_class) <> "-" <> value) do
       Map.put(tailwind, unquote(class), value)
     end
 
+    def merge_class(
+          %{unquote(class) => nil} = tailwind,
+          "-" <> unquote(string_class) <> "x-" <> value
+        ) do
+      Map.put(tailwind, unquote(class), %Directions{x: "-#{value}"})
+    end
+
     def merge_class(%{unquote(class) => nil} = tailwind, unquote(string_class) <> "x-" <> value) do
       Map.put(tailwind, unquote(class), %Directions{x: value})
+    end
+
+    def merge_class(
+          %{unquote(class) => all} = tailwind,
+          "-" <> unquote(string_class) <> "x-" <> value
+        )
+        when is_binary(all) do
+      Map.put(tailwind, unquote(class), %Directions{y: all, x: "-#{value}"})
     end
 
     def merge_class(%{unquote(class) => all} = tailwind, unquote(string_class) <> "x-" <> value)
@@ -335,13 +372,35 @@ defmodule Tails do
 
     def merge_class(
           %{unquote(class) => %Directions{} = directions} = tailwind,
+          "-" <> unquote(string_class) <> "x-" <> value
+        ) do
+      Map.put(tailwind, unquote(class), %{directions | x: "-#{value}", l: nil, r: nil})
+    end
+
+    def merge_class(
+          %{unquote(class) => %Directions{} = directions} = tailwind,
           unquote(string_class) <> "x-" <> value
         ) do
       Map.put(tailwind, unquote(class), %{directions | x: value, l: nil, r: nil})
     end
 
+    def merge_class(
+          %{unquote(class) => nil} = tailwind,
+          "-" <> unquote(string_class) <> "y-" <> value
+        ) do
+      Map.put(tailwind, unquote(class), %Directions{y: "-#{value}"})
+    end
+
     def merge_class(%{unquote(class) => nil} = tailwind, unquote(string_class) <> "y-" <> value) do
       Map.put(tailwind, unquote(class), %Directions{y: value})
+    end
+
+    def merge_class(
+          %{unquote(class) => all} = tailwind,
+          "-" <> unquote(string_class) <> "y-" <> value
+        )
+        when is_binary(all) do
+      Map.put(tailwind, unquote(class), %Directions{x: all, y: "-#{value}"})
     end
 
     def merge_class(%{unquote(class) => all} = tailwind, unquote(string_class) <> "y-" <> value)
@@ -351,9 +410,87 @@ defmodule Tails do
 
     def merge_class(
           %{unquote(class) => %Directions{} = directions} = tailwind,
+          "-" <> unquote(string_class) <> "y-" <> value
+        ) do
+      Map.put(tailwind, unquote(class), %{directions | y: "-#{value}", t: nil, b: nil})
+    end
+
+    def merge_class(
+          %{unquote(class) => %Directions{} = directions} = tailwind,
           unquote(string_class) <> "y-" <> value
         ) do
       Map.put(tailwind, unquote(class), %{directions | y: value, t: nil, b: nil})
+    end
+
+    for dir <- ~w(t b l r)a do
+      {split, to} =
+        if dir in [:t, :b] do
+          to = if dir == :t, do: :b, else: :t
+          {:y, to}
+        else
+          to = if dir == :l, do: :l, else: :r
+          {:x, to}
+        end
+
+      def merge_class(
+            %{unquote(class) => nil} = tailwind,
+            "-" <> unquote(string_class) <> unquote(to_string(dir)) <> "-" <> value
+          ) do
+        Map.put(tailwind, unquote(class), %Directions{} |> Map.put(unquote(dir), "-#{value}"))
+      end
+
+      def merge_class(
+            %{unquote(class) => nil} = tailwind,
+            unquote(string_class) <> unquote(to_string(dir)) <> "-" <> value
+          ) do
+        Map.put(tailwind, unquote(class), %Directions{} |> Map.put(unquote(dir), value))
+      end
+
+      def merge_class(
+            %{unquote(class) => %Directions{unquote(split) => split_value} = directions} =
+              tailwind,
+            "-" <> unquote(string_class) <> unquote(to_string(dir)) <> "-" <> value
+          )
+          when not is_nil(split_value) do
+        Map.put(
+          tailwind,
+          unquote(class),
+          directions
+          |> Map.put(unquote(dir), "-#{value}")
+          |> Map.put(unquote(to), split_value)
+          |> Map.put(unquote(split), nil)
+        )
+      end
+
+      def merge_class(
+            %{unquote(class) => %Directions{unquote(split) => split_value} = directions} =
+              tailwind,
+            unquote(string_class) <> unquote(to_string(dir)) <> "-" <> value
+          )
+          when not is_nil(split_value) do
+        Map.put(
+          tailwind,
+          unquote(class),
+          directions
+          |> Map.put(unquote(dir), value)
+          |> Map.put(unquote(to), split_value)
+          |> Map.put(unquote(split), nil)
+        )
+      end
+
+      def merge_class(
+            %{unquote(class) => %Directions{} = directions} = tailwind,
+            "-" <> unquote(string_class) <> unquote(to_string(dir)) <> "-" <> value
+          ) do
+        Map.put(tailwind, unquote(class), Map.put(directions, unquote(dir), "-#{value}"))
+      end
+
+      def merge_class(
+            %{unquote(class) => %Directions{} = directions} = tailwind,
+            unquote(string_class) <> unquote(to_string(dir)) <> "-" <> value
+          ) do
+        Map.put(tailwind, unquote(class), Map.put(directions, unquote(dir), value))
+      end
     end
   end
 
@@ -495,12 +632,36 @@ defmodule Tails do
 
   defp directional(nil, _key, _), do: ""
 
+  defp directional("-" <> value, key, nil) do
+    [" -", key, "-", value]
+  end
+
   defp directional(value, key, nil) when is_binary(value) do
     [" ", key, "-", value]
   end
 
+  defp directional("-" <> value, key, variant) do
+    [" ", variant, ":-", key, "-", value]
+  end
+
   defp directional(value, key, variant) when is_binary(value) do
     [" ", variant, ":", key, "-", value]
+  end
+
+  if @optimize_directions do
+    defp directional(%Directions{l: s, r: s, t: s, b: s}, key, variant) when not is_nil(s),
+      do: directional(s, key, variant)
+
+    defp directional(%Directions{x: s, y: s}, key, variant) when not is_nil(s),
+      do: directional(s, key, variant)
+
+    defp directional(%Directions{l: s, r: s, x: nil} = directions, key, variant)
+         when not is_nil(s),
+         do: directional(%{directions | x: s, l: nil, r: nil}, key, variant)
+
+    defp directional(%Directions{t: s, b: s, y: nil} = directions, key, variant)
+         when not is_nil(s),
+         do: directional(%{directions | y: s, t: nil, b: nil}, key, variant)
   end
 
   defp directional(%Directions{l: l, r: r, t: t, b: b, x: x, y: y}, key, variant) do
@@ -517,8 +678,14 @@ defmodule Tails do
 
   defp direction(nil, _, _, _), do: ""
 
+  defp direction("-" <> value, suffix, prefix, nil),
+    do: [" -", prefix, suffix, "-", value]
+
   defp direction(value, suffix, prefix, nil),
     do: [" ", prefix, suffix, "-", value]
+
+  defp direction("-" <> value, suffix, prefix, variant),
+    do: [" ", variant, ":-", prefix, suffix, "-", value]
 
   defp direction(value, suffix, prefix, variant),
     do: [" ", variant, ":", prefix, suffix, "-", value]
