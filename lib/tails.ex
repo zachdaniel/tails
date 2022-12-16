@@ -196,6 +196,9 @@ defmodule Tails do
         to_string(classes)
     end)
     |> case do
+      [] ->
+        ""
+
       [classes] ->
         classes(classes)
 
