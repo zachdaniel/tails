@@ -1,4 +1,20 @@
 defmodule Tails.Custom do
+  @moduledoc """
+  Use to create a custom tails module, that can be configured with `config :your_app, YourTails`
+
+  Additionally, themes can be passed at runtime.
+
+  Example Usage:
+
+  ```elixir
+  @themes %{
+    default: %{...},
+    dark: %{...}
+  }
+  use Tails.Custom, otp_app: :my_app, themes: @themes
+  ```
+  """
+
   defmacro __using__(opts) do
     quote generated: true, bind_quoted: [otp_app: opts[:otp_app], themes: opts[:themes]] do
       require Tails.Custom
