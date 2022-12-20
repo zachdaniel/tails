@@ -5,6 +5,27 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v0.1.1](https://github.com/zachdaniel/tails/compare/v0.1.0...v0.1.1) (2022-12-20)
+
+
+
+
+### Bug Fixes:
+
+* we can't split directionals because tailwind won't see them anymore
+
+### Improvements:
+
+* fallback to default theme
+
+* various improvements to configuration & theming
+
+* custom tails modules
+
+* support themes
+
+* add all builtin colors and colors from tailwind config
+
 ## [v0.1.0](https://github.com/zachdaniel/tails/compare/v0.1.0...v0.1.0) (2022-12-20)
 
 
