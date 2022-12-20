@@ -550,7 +550,7 @@ defmodule Tails do
 
   def remove(tails, class) do
     if MapSet.member?(tails.classes, class) do
-      %{tails | classes: MapSet.delete(tails, class)}
+      %{tails | classes: MapSet.delete(tails.classes, class)}
     else
       # This is a bit of a hack, could maybe be optimized or fixed later
 

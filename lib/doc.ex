@@ -26,13 +26,12 @@ defmodule Tails.Doc do
     key
     |> to_string()
     |> String.split("_")
-    |> Enum.map(fn
+    |> Enum.map_join(" ", fn
       "bg" ->
         "Background"
 
       other ->
         String.capitalize(other)
     end)
-    |> Enum.join(" ")
   end
 end
