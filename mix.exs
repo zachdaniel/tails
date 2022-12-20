@@ -1,14 +1,28 @@
 defmodule Tails.MixProject do
   use Mix.Project
 
+  @version "0.1.1"
+
   def project do
     [
       app: :tails,
-      version: "0.1.0",
+      version: @version,
       elixir: "~> 1.14",
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
-      deps: deps()
+      deps: deps(),
+      package: package()
+    ]
+  end
+
+  defp package do
+    [
+      name: :tails,
+      description: "A tailwind utility library for Elixir",
+      licenses: ["MIT"],
+      links: %{
+        GitHub: "https://github.com/zachdaniel/tails"
+      }
     ]
   end
 
