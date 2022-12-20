@@ -36,9 +36,7 @@ defmodule Tails.MixProject do
       {:dialyxir, ">= 0.0.0", only: :dev, runtime: false},
       {:sobelow, ">= 0.0.0", only: :dev, runtime: false},
       {:git_ops, "~> 2.5", only: :dev},
-      {:mix_test_watch, "~> 1.0", only: :dev, runtime: false},
-      {:parse_trans, "3.3.0", only: [:dev, :test], override: true},
-      {:elixir_sense, github: "elixir-lsp/elixir_sense", only: [:test, :dev, :docs]}
+      {:mix_test_watch, "~> 1.0", only: :dev, runtime: false}
     ]
   end
 end
