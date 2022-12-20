@@ -57,7 +57,7 @@ defmodule Tails.Custom do
         font_weight: %{prefix: "font", values: @font_weights},
         font_styles: %{prefix: "font", values: @font_styles},
         outline_style: %{prefix: "outline", values: @outline_styles, naked?: true},
-        outline_color: %{prefix: "outline", values: @all_colors},
+        outline_color: %{prefix: "outline", values: @all_colors, doc_values_placeholder: "colors"},
         bg_size: %{prefix: "bg", values: @bg_sizes},
         bg_repeat: %{prefix: "bg", values: @bg_repeats},
         bg_positions: %{prefix: "bg", values: @bg_positions},
@@ -65,7 +65,7 @@ defmodule Tails.Custom do
         bg_origin: %{prefix: "bg-origin", values: @bg_origins},
         bg_clip: %{prefix: "bg-clip", values: @bg_clips},
         bg_image: %{prefix: "bg", values: @bg_images},
-        bg: %{prefix: "bg", values: @all_colors},
+        bg: %{prefix: "bg", values: @all_colors, doc_values_placeholder: "colors"},
         bg_attachment: %{prefix: "bg", values: @bg_attachments}
       ]
 
