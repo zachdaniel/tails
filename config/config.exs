@@ -1,7 +1,5 @@
 import Config
 
-config :tails, :optimize_directions?, true
-
 if Mix.env() == :dev do
   config :git_ops,
     mix_project: Tails.MixProject,
