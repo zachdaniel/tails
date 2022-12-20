@@ -1,12 +1,20 @@
 defmodule Tails.Custom do
   defmacro __using__(opts) do
-    quote bind_quoted: [otp_app: opts[:otp_app]] do
+    quote generated: true, bind_quoted: [otp_app: opts[:otp_app], themes: opts[:themes]] do
       require Tails.Custom
+      otp_app = otp_app || :tails
 
-      @colors_file Application.compile_env(otp_app, :colors_file)
-      @no_merge_classes Application.compile_env(otp_app, :no_merge_classes) || []
-      @optimize_directions Application.compile_env(otp_app, :optimize_directions?)
-      @themes Application.compile_env(otp_app, :themes)
+      if otp_app == :tails do
+        @colors_file Application.compile_env(otp_app, :colors_file)
+        @no_merge_classes Application.compile_env(otp_app, :no_merge_classes) || []
+        @optimize_directions Application.compile_env(otp_app, :optimize_directions?)
+        @themes themes || Application.compile_env(otp_app, :themes)
+      else
+        @colors_file Application.compile_env(otp_app, __MODULE__)[:colors_file]
+        @no_merge_classes Application.compile_env(otp_app, __MODULE__)[:no_merge_classes] || []
+        @optimize_directions Application.compile_env(otp_app, __MODULE__)[:optimize_directions?]
+        @themes themes || Application.compile_env(otp_app, __MODULE__)[:themes]
+      end
 
       @colors (if @colors_file do
                  @external_resource @colors_file
@@ -17,9 +25,9 @@ defmodule Tails.Custom do
                    |> File.read!()
                    |> Jason.decode!()
 
-                 Map.mege(Tails.Colors.builtin_colors(), custom)
+                 Map.merge(Tails.Colors.builtin_colors(), custom)
                else
-                 %{}
+                 Tails.Colors.builtin_colors()
                end)
 
       @all_colors Tails.Colors.all_color_classes(@colors)
@@ -66,6 +74,7 @@ defmodule Tails.Custom do
         bg_clip: %{prefix: "bg-clip", values: @bg_clips},
         bg_image: %{prefix: "bg", values: @bg_images},
         bg: %{prefix: "bg", values: @all_colors, doc_values_placeholder: "colors"},
+        text_color: %{prefix: "text", values: @all_colors, doc_values_placeholder: "colors"},
         bg_attachment: %{prefix: "bg", values: @bg_attachments}
       ]
 
@@ -184,46 +193,11 @@ defmodule Tails.Custom do
 
       def classes(classes) when is_list(classes) do
         classes
-        |> Enum.filter(fn
-          {_classes, condition} ->
-            condition
-
-          _ ->
-            true
+        |> flatten_classes()
+        |> Enum.reduce("", fn class, acc ->
+          merge(acc, class)
         end)
-        |> Enum.map(fn
-          {classes, _} ->
-            classes =
-              if is_list(classes) do
-                classes(classes)
-              else
-                classes
-              end
-
-            to_string(classes)
-
-          classes ->
-            classes =
-              if is_list(classes) do
-                classes(classes)
-              else
-                classes
-              end
-
-            to_string(classes)
-        end)
-        |> case do
-          [] ->
-            ""
-
-          [classes] ->
-            classes(classes)
-
-          [classes | rest] ->
-            rest
-            |> Enum.reduce(classes, &merge(&2, &1))
-            |> to_string()
-        end
+        |> to_string()
       end
 
       def classes(classes) when is_binary(classes) do
@@ -234,6 +208,32 @@ defmodule Tails.Custom do
 
       defp new(classes) do
         merge(%__MODULE__{}, classes)
+      end
+
+      defp flatten_classes(classes) do
+        classes
+        |> Enum.filter(fn
+          {_classes, condition} ->
+            condition
+
+          _ ->
+            true
+        end)
+        |> Enum.map(fn
+          {classes, _} ->
+            classes
+
+          classes ->
+            classes
+        end)
+        |> Enum.flat_map(fn classes ->
+          if is_list(classes) do
+            flatten_classes(classes)
+          else
+            List.wrap(classes)
+          end
+        end)
+        |> Enum.map(&to_string/1)
       end
 
       @doc """
@@ -267,8 +267,8 @@ defmodule Tails.Custom do
           "-my-1" # this only happens if `optimize_directions` is set to `true`
           iex> merge("grid grid-cols-2 lg:grid-cols-3", "grid-cols-3 lg:grid-cols-4") |> to_string()
           "grid grid-cols-3 lg:grid-cols-4"
-          iex> merge("font-normal text-black hover:text-primary-light-300", "text-primary-600 dark:text-primary-dark-400 font-bold") |> to_string()
-          "font-bold text-primary-600 dark:text-primary-dark-400 hover:text-primary-light-300"
+          iex> merge("font-normal text-black hover:text-blue-300", "text-gray-600 dark:text-red-400 font-bold") |> to_string()
+          "font-bold text-gray-600 hover:text-blue-300 dark:text-red-400"
 
       Classes can be removed
 
@@ -335,8 +335,8 @@ defmodule Tails.Custom do
         %{tailwind | classes: MapSet.put(tailwind.classes, class)}
       end
 
-      def merge_class(_tailwind, "remove:*") do
-        %__MODULE__{}
+      def merge_class(%{theme: theme}, "remove:*") do
+        %__MODULE__{theme: theme}
       end
 
       def merge_class(tailwind, "remove:" <> class) do
@@ -350,7 +350,7 @@ defmodule Tails.Custom do
 
         for {key, replacement} <- Tails.Custom.replacements(replacements) do
           def merge_class(%{theme: unquote(theme)} = tailwind, unquote(to_string(key))) do
-            merge(tailwind, unquote(replacement))
+            merge(tailwind, classes(unquote(replacement)))
           end
         end
       end
@@ -773,8 +773,8 @@ defmodule Tails.Custom do
           end
         end
 
-        defp to_iodata(tailwind) do
-          Tails.to_iodata(tailwind)
+        defp to_iodata(%mod{} = tailwind) do
+          mod.to_iodata(tailwind)
         end
       end
 
