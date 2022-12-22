@@ -367,6 +367,10 @@ defmodule Tails.Custom do
             merge(tailwind, classes(unquote(replacement)))
           end
 
+          def merge_class(%{theme: unquote(to_string(theme))} = tailwind, unquote(to_string(key))) do
+            merge(tailwind, classes(unquote(replacement)))
+          end
+
           if theme == :default do
             # fallback to default
             def merge_class(tailwind, unquote(to_string(key))) do
