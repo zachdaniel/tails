@@ -16,18 +16,28 @@ defmodule Tails.Custom do
   """
 
   defmacro __using__(opts) do
-    quote generated: true, bind_quoted: [otp_app: opts[:otp_app], themes: opts[:themes]] do
+    quote location: :keep,
+          generated: true,
+          bind_quoted: [
+            otp_app: opts[:otp_app],
+            themes: opts[:themes],
+            dark_themes: opts[:dark_themes]
+          ] do
       require Tails.Custom
       otp_app = otp_app || :tails
 
       if otp_app == :tails do
         @colors_file Application.compile_env(otp_app, :colors_file)
         @no_merge_classes Application.compile_env(otp_app, :no_merge_classes) || []
+        @dark_themes dark_themes || Application.compile_env(otp_app, :dark_themes)
         @themes themes || Application.compile_env(otp_app, :themes)
+        @custom_variants Application.compile_env(otp_app, :variants) || []
       else
         @colors_file Application.compile_env(otp_app, __MODULE__)[:colors_file]
         @no_merge_classes Application.compile_env(otp_app, __MODULE__)[:no_merge_classes] || []
+        @dark_themes dark_themes || Application.compile_env(otp_app, __MODULE__)[:dark_themes]
         @themes themes || Application.compile_env(otp_app, __MODULE__)[:themes]
+        @custom_variants Application.compile_env(otp_app, __MODULE__)[:variants] || []
       end
 
       @colors (if @colors_file do
@@ -46,14 +56,14 @@ defmodule Tails.Custom do
 
       @all_colors Tails.Colors.all_color_classes(@colors)
 
-      @modifiers ~w(
+      @variants ~w(
     hover focus focus-within focus-visible active visited target first last only odd
     even first-of-type last-of-type only-of-type empty disabled enabled checked
     indeterminate default required valid invalid in-range out-of-range placeholder-shown
     autofill read-only open before after first-letter first-line marker selection file
     backdrop placeholder sm md lg xl 2xl dark portrait landscape motion-safe motion-reduce
     contrast-more contrast-less rtl ltr
-    )
+    ) ++ @custom_variants
 
       @font_weights ~w(thin extralight light normal medium semibold bold extrabold black)
       @font_styles ~w(thin extralight light normal medium semibold bold extrabold black)
@@ -99,6 +109,7 @@ defmodule Tails.Custom do
       ]
 
       @prefixed [
+        col_span: %{prefix: "col-span"},
         animate: %{prefix: "animate"},
         text: %{prefix: "text"},
         outline_width: %{prefix: "outline"},
@@ -162,6 +173,7 @@ defmodule Tails.Custom do
                     classes: MapSet.new(),
                     variants: %{},
                     variant: nil,
+                    fallback: :default,
                     theme: :default
                   ]
 
@@ -344,38 +356,125 @@ defmodule Tails.Custom do
         }
       end
 
+      defp alter_dark_theme(%{variant: "dark"} = tailwind, fallback, theme) do
+        tailwind
+        |> set_theme(theme)
+        |> set_fallback_theme(fallback)
+      end
+
+      defp alter_dark_theme(tailwind, fallback, theme) do
+        %{
+          tailwind
+          | variants:
+              Map.new(tailwind.variants, fn {key, value} ->
+                {key, alter_dark_theme(value, fallback, theme)}
+              end)
+        }
+      end
+
+      defp set_fallback_theme(tailwind, fallback) do
+        %{
+          tailwind
+          | fallback: fallback,
+            variants:
+              Map.new(tailwind.variants, fn {key, value} ->
+                {key, set_fallback_theme(value, fallback)}
+              end)
+        }
+      end
+
       @doc false
       def merge_class(tailwind, "keep:" <> class) do
         %{tailwind | classes: MapSet.put(tailwind.classes, class)}
       end
 
-      def merge_class(%{theme: theme}, "remove:*") do
-        %__MODULE__{theme: theme}
+      def merge_class(%{theme: theme, variants: variants}, "remove:*") do
+        %__MODULE__{
+          theme: theme,
+          variants:
+            Map.new(variants, fn {key, value} ->
+              {key, merge_class(value, "remove:*")}
+            end)
+        }
       end
 
       def merge_class(tailwind, "remove:" <> class) do
         remove(tailwind, class)
       end
 
-      for {theme, replacements} <- @themes || [] do
-        def merge_class(tailwind, "theme:" <> unquote(to_string(theme))) do
-          set_theme(tailwind, unquote(theme))
+      replacements =
+        Enum.flat_map(@themes || [], fn {theme, replacements} ->
+          replacements
+          |> Tails.Custom.replacements()
+          |> Enum.map(fn {key, replacement} ->
+            {theme, key, replacement}
+          end)
+        end)
+
+      for {theme, _replacements} <- @themes || [] do
+        if @dark_themes[theme] do
+          def merge_class(tailwind, "theme:" <> unquote(to_string(theme))) do
+            tailwind
+            |> set_theme(unquote(theme))
+            |> alter_dark_theme(unquote(theme), unquote(@dark_themes[theme]))
+          end
+        else
+          def merge_class(tailwind, "theme:" <> unquote(to_string(theme))) do
+            set_theme(tailwind, unquote(theme))
+          end
         end
+      end
 
-        for {key, replacement} <- Tails.Custom.replacements(replacements) do
-          def merge_class(%{theme: unquote(theme)} = tailwind, unquote(to_string(key))) do
-            merge(tailwind, classes(unquote(replacement)))
-          end
-
-          def merge_class(%{theme: unquote(to_string(theme))} = tailwind, unquote(to_string(key))) do
-            merge(tailwind, classes(unquote(replacement)))
-          end
-
-          if theme == :default do
-            # fallback to default
-            def merge_class(tailwind, unquote(to_string(key))) do
-              merge(tailwind, classes(unquote(replacement)))
+      # First match on exact theme matches
+      for {theme, key, replacement} <- replacements do
+        dark_replacement =
+          Enum.find_value(replacements, fn {r_theme, r_key, dark_replacement} ->
+            if r_theme == @dark_themes[theme] && r_key == key do
+              dark_replacement
             end
+          end)
+
+        if dark_replacement do
+          def merge_class(%{theme: theme} = tailwind, unquote(to_string(key)))
+              when theme in [unquote(theme), unquote(to_string(theme))] do
+            merge(tailwind, classes([unquote(replacement), unquote("dark:#{dark_replacement}")]))
+          end
+        else
+          def merge_class(%{theme: theme} = tailwind, unquote(to_string(key)))
+              when theme in [unquote(theme), unquote(to_string(theme))] do
+            merge(tailwind, classes(unquote(replacement)))
+          end
+        end
+      end
+
+      # Then match on each theme as a potential fallback theme
+      # We don't check for a matching dark theme when falling back
+      for {theme, key, replacement} <- replacements do
+        def merge_class(%{fallback: theme} = tailwind, unquote(to_string(key)))
+            when theme in [unquote(theme), unquote(to_string(theme))] do
+          merge(tailwind, classes(unquote(replacement)))
+        end
+      end
+
+      # final fallback to default
+      for {:default, key, replacement} <- replacements do
+        dark_replacement =
+          Enum.find_value(replacements, fn {r_theme, r_key, dark_replacement} ->
+            if r_theme == @dark_themes[:default] && r_key == key do
+              dark_replacement
+            end
+          end)
+
+        if dark_replacement do
+          def merge_class(tailwind, unquote(to_string(key))) do
+            merge(
+              tailwind,
+              classes([unquote(replacement), unquote("dark:#{dark_replacement}")])
+            )
+          end
+        else
+          def merge_class(tailwind, unquote(to_string(key))) do
+            merge(tailwind, classes(unquote(replacement)))
           end
         end
       end
@@ -386,13 +485,13 @@ defmodule Tails.Custom do
         end
       end
 
-      for modifier <- @modifiers do
+      for modifier <- @variants do
         def merge_class(tailwind, unquote(modifier) <> ":" <> rest) do
           rest = String.split(rest, ":")
           last = List.last(rest)
-          modifiers = :lists.droplast(rest)
+          variants = :lists.droplast(rest)
 
-          key = Enum.sort([unquote(modifier) | modifiers])
+          key = Enum.sort([unquote(modifier) | variants])
 
           if Map.has_key?(tailwind.variants, key) do
             %{tailwind | variants: Map.update!(tailwind.variants, key, &merge_class(&1, last))}
@@ -620,13 +719,13 @@ defmodule Tails.Custom do
         end
       end
 
-      for modifier <- @modifiers do
+      for modifier <- @variants do
         def remove(tailwind, unquote(modifier) <> ":" <> rest) do
           rest = String.split(rest, ":")
           last = List.last(rest)
-          modifiers = :lists.droplast(rest)
+          variants = :lists.droplast(rest)
 
-          key = Enum.sort([unquote(modifier) | modifiers])
+          key = Enum.sort([unquote(modifier) | variants])
 
           if Map.has_key?(tailwind.variants, key) do
             %{tailwind | variants: Map.update!(tailwind.variants, key, &remove(&1, last))}
