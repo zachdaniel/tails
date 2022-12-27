@@ -57,22 +57,23 @@ defmodule Tails.Custom do
       @all_colors Tails.Colors.all_color_classes(@colors)
 
       @variants ~w(
-    hover focus focus-within focus-visible active visited target first last only odd
-    even first-of-type last-of-type only-of-type empty disabled enabled checked
-    indeterminate default required valid invalid in-range out-of-range placeholder-shown
-    autofill read-only open before after first-letter first-line marker selection file
-    backdrop placeholder sm md lg xl 2xl dark portrait landscape motion-safe motion-reduce
-    contrast-more contrast-less rtl ltr
-    ) ++ @custom_variants
+        hover focus focus-within focus-visible active visited target first last only odd
+        even first-of-type last-of-type only-of-type empty disabled enabled checked
+        indeterminate default required valid invalid in-range out-of-range placeholder-shown
+        autofill read-only open before after first-letter first-line marker selection file
+        backdrop placeholder sm md lg xl 2xl dark portrait landscape motion-safe motion-reduce
+        contrast-more contrast-less rtl ltr
+      ) ++ @custom_variants
 
       @font_weights ~w(thin extralight light normal medium semibold bold extrabold black)
-      @font_styles ~w(thin extralight light normal medium semibold bold extrabold black)
+      @font_smoothings ~w(antialiased subpixel-antialiased)
+      @font_styles ~w(italic non-italic)
       @positions ~w(static fixed absolute relative sticky)
       @display ~w(
-    block inline-block inline flex inline-flex table inline-table table-caption table-cell
-    table-column table-column-group table-footer-group table-header-group table-row-group
-    table-row flow-root grid inline-grid contents list-item hidden)
-
+        block inline-block inline flex inline-flex table inline-table table-caption table-cell
+        table-column table-column-group table-footer-group table-header-group table-row-group
+        table-row flow-root grid inline-grid contents list-item hidden
+      )
       @bg_sizes ~w(auto cover contain)
       @bg_repeats ~w(repeat no-repeat repeat-x repeat-y repeat-round repeat-space)
       @bg_positions ~w(bottom center left left-bottom left-top right right-bottom right-top top)
@@ -82,14 +83,257 @@ defmodule Tails.Custom do
       @bg_clips ~w(border padding content text)
       @bg_images ~w(none gradient-to-t gradient-to-tr gradient-to-r gradient-to-br gradient-to-b gradient-to-bl gradient-to-l gradient-to-tl)
       @outline_styles ~w(none dashed dotted double)
-
+      @aspect_ratios ~w(auto square video)
       @text_overflow ~w(truncate text-ellipsis text-clip)
+      @break_values ~w(auto avoid all avoid-page page left right column)
+      @break_inside_values ~w(auto avoid avoid-page avoid-column)
+      @box_decoration_breaks ~w(clone slice)
+      @box_sizes ~w(border content)
+      @floats ~w(left right none)
+      @clears ~w(left right both none)
+      @isolations ~w(isolate isolation-auto)
+      @flex_directions ~w(row row-reverse col col-reverse)
+      @object_fits ~w(contain cover fill none scale-down)
+      @object_positions ~w(bottom center left left-bottom left-top right right-bottom right-top top)
+      @overflows ~w(auto hidden clip visible scroll)
+      @overscrolls ~w(auto contain none)
+      @visibilities ~w(visible invisible collapse)
+      @flex_wraps ~w(wrap wrap-reverse nowrap)
+      @flex_grow_shrinks ~w(1 auto initial none)
+      @flex_specific_grow_shrinks ~w(0)
+      @grid_flows ~w(row col dense row-dense col-dense)
+      @auto_cols_rows ~w(auto min max fr)
+      @justify_contents ~w(start end center between around evenly)
+      @justify_items ~w(start end center stretch)
+      @justify_selfs ~w(auto start end center stretch)
+      @align_contents ~w(center start end between around evenly baseline)
+      @align_items ~w(start end center baseline stretch)
+      @align_selfs ~w(auto start end center stretch baseline)
+      @place_contents ~w(center start end between around evenly baseline stretch)
+      @place_items ~w(start end center baseline stretch)
+      @place_selfs ~w(auto start end center stretch)
+      @font_families ~w(sans serif mono)
+      @font_variant_numerics ~w(normal-nums ordinal slashed-zero lining-nums oldstyle-nums proportional-nums tabular-nums diagonal-fractions stacked-fractions)
+      @trackings ~w(tighter tight normal wide wider widest)
+      @list_style_types ~w(none disc decimal)
+      @list_style_positions ~w(inside outside)
+      @text_alignments ~w(left center right justify start end)
+      @text_decoration_styles ~w(solid double dotted dashed wavy)
+      @text_decorations ~w(underline overline line-through no-underline)
+      @text_transforms ~w(uppercase lowercase capitalize normal-case)
+      @text_overflows ~w(truncate text-ellipses text-clip)
+      @vertical_alignments ~w(baseline top middle bottom text-top text-bottom sub super)
+      @whitespaces ~w(normal nowrap pre pre-line pre-wrap)
+      @word_breaks ~w(normal words all keep)
+      @border_styles ~w(solid dashed dotted double hidden none)
+      @divide_styles ~w(solid dashed dotted double none)
+      @outline_styles ~w(none dashed dotted double)
+      @blend_modes ~w(
+        normal multiply screen overlay darken lighten color-dodge color-burn
+        hard-light soft-light difference exclusion hue saturation color luminosity
+      )
+      @table_layouts ~w(auto fixed)
+      @mix_blend_modes @blend_modes ++ ~w(plus-lighter)
+      @bg_blend_modes @blend_modes
+      @border_collapse_modes ~w(collapse saturate)
+      @transition_timing_functions ~w(ease-linear ease-in ease-out ease-in-out)
+      @transition_properties ~w(none all colors opacity shadow transform)
+      @animations ~w(none spin ping pulse bounce)
+      @transforms ~w(gpu none)
+      @transform_origins ~w(center top top-right right bottom-right bottom bottom-left left top-left)
+      @cursors ~w(
+        auto default pointer wait text move help not-allowed none context-menu progress cell crosshair
+        vertical-text alias copy no-drop grab grabbing all-scroll col-resize row-resize n-resize e-resize
+        s-resize w-resize ne-resize nw-resize se-resize sw-resize ew-resize ns-resize nesw-resize nwse-resize
+        zoom-in zoom-out
+      )
+      @pointer_events ~w(auto none)
+      @resizes ~w(none y x)
+      @scroll_behaviors ~w(auto smooth)
+      @snap_aligns ~w(start end center align-none)
+      @snap_stops ~w(normal always)
+      @snap_types ~w(none x y both)
+      @snap_strictness ~w(mandatory proximity)
+      @touch_actions ~w(auto none pan-x pan-left pan-right pan-y pan-up pan-down pinch-zoom manipulation)
+      @user_selects ~w(none text all auto)
+      @will_change ~w(auto scroll contents transform)
 
       @prefixed_with_values [
+        will_change: %{prefix: "will-change", values: @will_change},
+        user_select: %{prefix: "select", values: @user_selects},
+        touch_action: %{prefix: "touch", values: @touch_actions},
+        snap_type: %{prefix: "snap", values: @snap_types},
+        snap_strictness: %{prefix: "snap", values: @snap_strictness},
+        snap_align: %{prefix: "snap", values: @snap_aligns},
+        snap_stop: %{prefix: "snap", values: @snap_stops},
+        scroll_behaviour: %{prefix: "scroll", values: @scroll_behaviors},
+        resize: %{prefix: "resize", values: @resizes, naked?: true},
+        pointer_events: %{prefix: "pointer-events", values: @pointer_events},
+        cursor: %{prefix: "cursor", values: @cursors},
+        transform: %{prefix: "transform", values: @transforms},
+        animate: %{prefix: "animate", values: @animations},
+        transition_property: %{prefix: "transition", values: @transition_properties, naked?: true},
+        table_layout: %{prefix: "table", values: @table_layouts},
+        border_collapse_mode: %{prefix: "border", values: @border_collapse_modes},
+        mix_blend_mode: %{prefix: "mix-blend", values: @mix_blend_modes},
+        bg_blend_mode: %{prefix: "bg-blend", values: @bg_blend_modes},
+        outline_styles: %{prefix: "outline", values: @outline_styles, naked?: true},
+        divide_styles: %{prefix: "divide", values: @divide_styles},
+        border_style: %{prefix: "border", values: @border_styles},
+        word_breaks: %{prefix: "break", values: @word_breaks},
+        whitespace: %{prefix: "whitespace", values: @whitespaces},
+        text_align: %{prefix: "text", values: @text_alignments},
+        vertical_align: %{prefix: "align", values: @vertical_alignments},
+        text_decoration_style: %{prefix: "decoration", values: @text_decoration_styles},
+        fill_color: %{
+          prefix: "fill",
+          values: @all_colors,
+          doc_values_placeholder: "colors",
+          suffix_separators: ["/"]
+        },
+        outline_color: %{
+          prefix: "outline",
+          values: @all_colors,
+          doc_values_placeholder: "colors",
+          suffix_separators: ["/"]
+        },
+        caret_color: %{
+          prefix: "caret",
+          values: @all_colors,
+          doc_values_placeholder: "colors",
+          suffix_separators: ["/"]
+        },
+        accent_color: %{
+          prefix: "accent",
+          values: @all_colors,
+          doc_values_placeholder: "colors",
+          suffix_separators: ["/"]
+        },
+        ring_color: %{
+          prefix: "ring",
+          values: @all_colors,
+          doc_values_placeholder: "colors",
+          suffix_separators: ["/"]
+        },
+        shadow: %{
+          prefix: "shadow",
+          values: ~w(inner none),
+          suffix_separators: ["-"]
+        },
+        shadow_color: %{
+          prefix: "shadow",
+          values: @all_colors,
+          doc_values_placeholder: "colors",
+          suffix_separators: ["/"]
+        },
+        ring_offset_color: %{
+          prefix: "ring-offset",
+          values: @all_colors,
+          doc_values_placeholder: "colors",
+          suffix_separators: ["/"]
+        },
+        divide_color: %{
+          prefix: "divide",
+          values: @all_colors,
+          doc_values_placeholder: "colors",
+          suffix_separators: ["/"]
+        },
+        border_color: %{
+          prefix: "border",
+          values: @all_colors,
+          doc_values_placeholder: "colors",
+          overwrites: ~w(border_color_y border_color_x)a,
+          suffix_separators: ["/"]
+        },
+        border_color_y: %{
+          prefix: "border-y",
+          values: @all_colors,
+          doc_values_placeholder: "colors",
+          suffix_separators: ["/"]
+        },
+        border_color_x: %{
+          prefix: "border-x",
+          values: @all_colors,
+          doc_values_placeholder: "colors",
+          suffix_separators: ["/"]
+        },
+        border_color_t: %{
+          prefix: "border-t",
+          values: @all_colors,
+          doc_values_placeholder: "colors",
+          suffix_separators: ["/"]
+        },
+        border_color_r: %{
+          prefix: "border-r",
+          values: @all_colors,
+          doc_values_placeholder: "colors",
+          suffix_separators: ["/"]
+        },
+        border_color_b: %{
+          prefix: "border-b",
+          values: @all_colors,
+          doc_values_placeholder: "colors",
+          suffix_separators: ["/"]
+        },
+        border_color_l: %{
+          prefix: "border-l",
+          values: @all_colors,
+          doc_values_placeholder: "colors",
+          suffix_separators: ["/"]
+        },
+        text_decoration_color: %{
+          prefix: "decoration",
+          values: @all_colors,
+          doc_values_placeholder: "colors",
+          suffix_separators: ["/"]
+        },
+        list_style_type: %{prefix: "list", values: @list_style_types},
+        list_style_position: %{prefix: "list", values: @list_style_positions},
+        tracking: %{prefix: "tracking", values: @trackings},
+        place_content: %{prefix: "place-content", values: @place_contents},
+        place_items: %{prefix: "place-items", values: @place_items},
+        place_selfs: %{prefix: "place-selfs", values: @place_selfs},
+        align_content: %{prefix: "content", values: @align_contents},
+        align_items: %{prefix: "items", values: @align_items},
+        align_selfs: %{prefix: "selfs", values: @align_selfs},
+        auto_cols: %{prefix: "auto-cols", values: @auto_cols_rows},
+        auto_rows: %{prefix: "auto-rows", values: @auto_cols_rows},
+        grid_flow: %{prefix: "grid-flow", values: @grid_flows},
+        justify_contents: %{prefix: "justify", values: @justify_contents},
+        justify_items: %{prefix: "justify-items", values: @justify_items},
+        justify_selfs: %{prefix: "justify-selfs", values: @justify_selfs},
+        flex_grow_shrink: %{prefix: "flex", values: @flex_grow_shrinks},
+        flex_direction: %{prefix: "flex", values: @flex_directions},
+        shrink: %{prefix: "shrink", values: @flex_specific_grow_shrinks, naked?: true},
+        grow: %{prefix: "grow", values: @flex_specific_grow_shrinks, naked?: true},
+        flex_wrap: %{prefix: "flex", values: @flex_wraps},
+        overflow: %{
+          prefix: "overflow",
+          values: @overflows,
+          overwrites: ~w(overflow_x overflow_y)a
+        },
+        overflow_x: %{prefix: "overflow-x", values: @overflows},
+        overflow_y: %{prefix: "overflow-y", values: @overflows},
+        overscroll: %{
+          prefix: "overscroll",
+          values: @overscrolls,
+          overwrites: ~w(overscroll_x overscroll_y)a
+        },
+        overscroll_x: %{prefix: "overscroll-x", values: @overscrolls},
+        overscroll_y: %{prefix: "overscroll-y", values: @overscrolls},
+        object_fit: %{prefix: "object", values: @object_fits},
+        object_position: %{prefix: "object", values: @object_positions},
+        float: %{prefix: "float", values: @floats},
+        clear: %{prefix: "clear", values: @clears},
+        break_after: %{prefix: "break-after", values: @break_values},
+        break_before: %{prefix: "break-before", values: @break_values},
+        break_inside: %{prefix: "break-inside", values: @break_inside_values},
+        box_decoration: %{prefix: "box-decoration", values: @box_decoration_breaks},
+        box_size: %{prefix: "box", values: @box_sizes},
+        font_family: %{prefix: "font", values: @font_families},
         font_weight: %{prefix: "font", values: @font_weights},
-        font_styles: %{prefix: "font", values: @font_styles},
+        aspect_ratio: %{prefix: "aspect", values: @aspect_ratios},
         outline_style: %{prefix: "outline", values: @outline_styles, naked?: true},
-        outline_color: %{prefix: "outline", values: @all_colors, doc_values_placeholder: "colors"},
         bg_size: %{prefix: "bg", values: @bg_sizes},
         bg_repeat: %{prefix: "bg", values: @bg_repeats},
         bg_positions: %{prefix: "bg", values: @bg_positions},
@@ -97,30 +341,143 @@ defmodule Tails.Custom do
         bg_origin: %{prefix: "bg-origin", values: @bg_origins},
         bg_clip: %{prefix: "bg-clip", values: @bg_clips},
         bg_image: %{prefix: "bg", values: @bg_images},
-        bg: %{prefix: "bg", values: @all_colors, doc_values_placeholder: "colors"},
-        text_color: %{prefix: "text", values: @all_colors, doc_values_placeholder: "colors"},
-        bg_attachment: %{prefix: "bg", values: @bg_attachments}
+        bg: %{
+          prefix: "bg",
+          values: @all_colors,
+          doc_values_placeholder: "colors",
+          suffix_separators: ["/"]
+        },
+        text_color: %{
+          prefix: "text",
+          values: @all_colors,
+          doc_values_placeholder: "colors",
+          suffix_separators: ["/"]
+        },
+        bg_attachment: %{prefix: "bg", values: @bg_attachments},
+        col: %{prefix: "col", values: ~w(auto)}
       ]
 
       @with_values [
+        sr_only: %{values: ~w(sr-only not-sr-only)},
+        transition_timing_function: %{
+          values: @transition_timing_functions,
+          arbitrary_prefix: "ease-"
+        },
+        text_overflows: %{values: @text_overflows},
+        text_transform: %{values: @text_transforms},
+        text_decoration: %{values: @text_decorations},
+        isolation: %{values: @isolations},
         position: %{values: @positions},
+        font_smoothing: %{values: @font_smoothings},
+        font_style: %{values: @font_styles},
         display: %{values: @display},
+        visibility: %{values: @visibilities},
         text_overflow: %{values: @text_overflow}
       ]
 
+      @singletons Enum.map(
+                    ~w(container content-none space-y-reverse space-x-reverse divide-y-reverse divide-x-reverse ring-inset filter-none backdrop-filter-none col-auto row-auto) ++
+                      @font_variant_numerics,
+                    &String.to_atom/1
+                  )
+
       @prefixed [
+        stroke_width: %{prefix: "stroke"},
+        rotate: %{prefix: "rotate"},
+        translate: %{prefix: "translate"},
+        translate_x: %{prefix: "translate-x"},
+        translate_y: %{prefix: "translate-y"},
+        scale_x: %{prefix: "scale-x"},
+        scale_y: %{prefix: "scale-y"},
+        scale: %{prefix: "scale"},
+        skew_x: %{prefix: "skew-x"},
+        skew_y: %{prefix: "skew-y"},
+        duration: %{prefix: "duration"},
+        delay: %{prefix: "delay"},
+        blur: %{prefix: "blur", naked?: true},
+        brightness: %{prefix: "brightness"},
+        contrast: %{prefix: "contrast"},
+        sepia: %{prefix: "sepia"},
+        hue_rotate: %{prefix: "hue-rotate"},
+        grayscale: %{prefix: "grayscale", naked?: true},
+        saturate: %{prefix: "saturate"},
+        invert: %{prefix: "invert", naked?: true},
+        drop_shadow: %{prefix: "drop-shadow", naked?: true},
+        backdrop_blur: %{prefix: "backgdrop-blur", naked?: true},
+        backdrop_brightness: %{prefix: "backgdrop-brightness"},
+        backdrop_contrast: %{prefix: "backgdrop-contrast"},
+        backdrop_sepia: %{prefix: "backgdrop-sepia"},
+        backdrop_hue_rotate: %{prefix: "backgdrop-hue-rotate"},
+        backdrop_grayscale: %{prefix: "backgdrop-grayscale", naked?: true},
+        backdrop_saturate: %{prefix: "backgdrop-saturate"},
+        backdrop_invert: %{prefix: "backgdrop-invert", naked?: true},
+        backdrop_opacity: %{prefix: "backdrop-opacity"},
+        ring_width: %{prefix: "ring", naked?: true},
+        rounded_t: %{prefix: "rounded-t", naked?: true, overwrites: ~w(rounded_tl rounded_tr)a},
+        rounded_r: %{prefix: "rounded-r", naked?: true, overwrites: ~w(rounded_tr rounded_br)a},
+        rounded_b: %{prefix: "rounded-b", naked?: true, overwrites: ~w(rounded_bl rounded_br)a},
+        rounded_l: %{prefix: "rounded-l", naked?: true, overwrites: ~w(rounded_tl rounded_bl)a},
+        rounded_tl: %{prefix: "rounded-tl", naked?: true},
+        rounded_tr: %{prefix: "rounded-tr", naked?: true},
+        rounded_bl: %{prefix: "rounded-bl", naked?: true},
+        rounded_br: %{prefix: "rounded-br", naked?: true},
+        rounded: %{prefix: "rounded", overwrites: ~w(
+          rounded_t rounded_r rounded_b rounded_l
+          rounded_tl rounded_tr rounded_bl rounded_br
+        )a},
+        underline_offset: %{prefix: "underline-offset"},
+        text_decoration_thickness: %{prefix: "decoration"},
+        text_indent: %{prefix: "indent"},
+        leading: %{prefix: "leading"},
+        gap: %{prefix: "gap", overwrites: ~w(gap_x gap_y)a},
+        gap_x: %{prefix: "gap-x"},
+        gap_y: %{prefix: "gap-y"},
+        order: %{prefix: "order"},
+        basis: %{prefix: "basis"},
+        space_x: %{prefix: "space-x"},
+        space_y: %{prefix: "space-y"},
+        z: %{prefix: "z"},
+        left: %{prefix: "left"},
+        right: %{prefix: "right"},
+        top: %{prefix: "top"},
+        bottom: %{prefix: "bottom"},
+        inset: %{prefix: "inset", overwrites: ~w(inset_x inset_y top right bottom left)a},
+        inset_y: %{prefix: "inset-y", overwrites: ~w(top bottom)a},
+        inset_x: %{prefix: "inset-x", overwrites: ~w(right left)a},
+        columns: %{prefix: "columns"},
         col_span: %{prefix: "col-span"},
-        animate: %{prefix: "animate"},
-        text: %{prefix: "text"},
+        col_start: %{prefix: "col-start"},
+        col_end: %{prefix: "col-end"},
+        row_span: %{prefix: "row-span"},
+        row_start: %{prefix: "row-start"},
+        row_end: %{prefix: "row-end"},
+        font_size: %{prefix: "text"},
         outline_width: %{prefix: "outline"},
         outline_offset: %{prefix: "outline-offset"},
         grid_cols: %{prefix: "grid-cols"},
         grid_rows: %{prefix: "grid-rows"},
         width: %{prefix: "w"},
-        height: %{prefix: "h"}
+        min_width: %{prefix: "min-w"},
+        max_width: %{prefix: "max-w"},
+        height: %{prefix: "h"},
+        min_height: %{prefix: "min-h"},
+        max_height: %{prefix: "max-h"}
       ]
 
-      @directional [p: %{prefix: "p"}, m: %{prefix: "m"}]
+      @simple_overwrite_rules %{
+        "col-auto" => ~w(col_span col_start col_end)a,
+        "row-auto" => ~w(row_span col_start col_end)a
+      }
+
+      @directional [
+        p: %{prefix: "p"},
+        m: %{prefix: "m"},
+        scroll_m: %{prefix: "scroll-m"},
+        scroll_p: %{prefix: "scroll-p"},
+        divide: %{prefix: "divide", dash_suffix?: true},
+        border_width: %{prefix: "border", dash_suffix?: true},
+        border_spacing: %{prefix: "border-spacing", dash_suffix?: true}
+      ]
 
       @moduledoc """
       Tailwind class utilities like class merging.
@@ -164,11 +521,19 @@ defmodule Tails.Custom do
       Any values matching the following prefixes will be merged with eachother respectively
 
       #{Tails.Doc.doc_prefixed(@prefixed)}
+
+      ### Singletons
+
+      The following classes are tracked as special classes, but don't have any special merge behavior
+      because they either compose with other similar classes or have no conflicts
+
+      #{Enum.map_join(@singletons, "\n", &"* #{&1}")}
       """
       defstruct Keyword.keys(@directional) ++
                   Keyword.keys(@prefixed) ++
                   Keyword.keys(@with_values) ++
                   Keyword.keys(@prefixed_with_values) ++
+                  @singletons ++
                   [
                     classes: MapSet.new(),
                     variants: %{},
@@ -280,7 +645,7 @@ defmodule Tails.Custom do
           iex> merge("p-2", "p-4") |> to_string()
           "p-4"
           iex> merge("p-4", "px-2") |> to_string()
-          "px-2 py-4"
+          "p-4 px-2"
           iex> merge("font-bold", "font-thin") |> to_string()
           "font-thin"
           iex> merge("block absolute", "fixed hidden") |> to_string()
@@ -345,6 +710,10 @@ defmodule Tails.Custom do
         Enum.reduce(list, &merge(&2, &1))
       end
 
+      def merge(value) when not is_list(value) do
+        merge([value])
+      end
+
       defp set_theme(tailwind, theme) do
         %{
           tailwind
@@ -381,6 +750,17 @@ defmodule Tails.Custom do
                 {key, set_fallback_theme(value, fallback)}
               end)
         }
+      end
+
+      for {source_class, overwrites} <- @simple_overwrite_rules do
+        for overwrite <- overwrites do
+          def merge_class(%{unquote(overwrite) => v} = tailwind, unquote(to_string(source_class)))
+              when not is_nil(v) do
+            tailwind
+            |> Map.put(unquote(overwrite), nil)
+            |> merge_class(unquote(to_string(source_class)))
+          end
+        end
       end
 
       @doc false
@@ -505,177 +885,110 @@ defmodule Tails.Custom do
         end
       end
 
-      for {class, %{prefix: string_class}} <- @directional do
-        def merge_class(tailwind, "-" <> unquote(string_class) <> "-" <> value) do
-          Map.put(tailwind, unquote(class), "-#{value}")
+      for value <- @singletons do
+        def merge_class(tailwind, unquote(to_string(value))) do
+          Map.put(tailwind, unquote(value), true)
         end
-
-        def merge_class(tailwind, unquote(string_class) <> "-" <> value) do
-          Map.put(tailwind, unquote(class), value)
-        end
-
-        def merge_class(
-              %{unquote(class) => nil} = tailwind,
-              "-" <> unquote(string_class) <> "x-" <> value
-            ) do
-          Map.put(tailwind, unquote(class), %Directions{x: "-#{value}"})
-        end
-
-        def merge_class(
-              %{unquote(class) => nil} = tailwind,
-              unquote(string_class) <> "x-" <> value
-            ) do
-          Map.put(tailwind, unquote(class), %Directions{x: value})
-        end
-
-        def merge_class(
-              %{unquote(class) => all} = tailwind,
-              "-" <> unquote(string_class) <> "x-" <> value
-            )
-            when is_binary(all) do
-          Map.put(tailwind, unquote(class), %Directions{y: all, x: "-#{value}"})
-        end
-
-        def merge_class(
-              %{unquote(class) => all} = tailwind,
-              unquote(string_class) <> "x-" <> value
-            )
-            when is_binary(all) do
-          Map.put(tailwind, unquote(class), %Directions{y: all, x: value})
-        end
-
-        def merge_class(
-              %{unquote(class) => %Directions{} = directions} = tailwind,
-              "-" <> unquote(string_class) <> "x-" <> value
-            ) do
-          Map.put(tailwind, unquote(class), %{directions | x: "-#{value}", l: nil, r: nil})
-        end
-
-        def merge_class(
-              %{unquote(class) => %Directions{} = directions} = tailwind,
-              unquote(string_class) <> "x-" <> value
-            ) do
-          Map.put(tailwind, unquote(class), %{directions | x: value, l: nil, r: nil})
-        end
-
-        def merge_class(
-              %{unquote(class) => nil} = tailwind,
-              "-" <> unquote(string_class) <> "y-" <> value
-            ) do
-          Map.put(tailwind, unquote(class), %Directions{y: "-#{value}"})
-        end
-
-        def merge_class(
-              %{unquote(class) => nil} = tailwind,
-              unquote(string_class) <> "y-" <> value
-            ) do
-          Map.put(tailwind, unquote(class), %Directions{y: value})
-        end
-
-        def merge_class(
-              %{unquote(class) => all} = tailwind,
-              "-" <> unquote(string_class) <> "y-" <> value
-            )
-            when is_binary(all) do
-          Map.put(tailwind, unquote(class), %Directions{x: all, y: "-#{value}"})
-        end
-
-        def merge_class(
-              %{unquote(class) => all} = tailwind,
-              unquote(string_class) <> "y-" <> value
-            )
-            when is_binary(all) do
-          Map.put(tailwind, unquote(class), %Directions{x: all, y: value})
-        end
-
-        def merge_class(
-              %{unquote(class) => %Directions{} = directions} = tailwind,
-              "-" <> unquote(string_class) <> "y-" <> value
-            ) do
-          Map.put(tailwind, unquote(class), %{directions | y: "-#{value}", t: nil, b: nil})
-        end
-
-        def merge_class(
-              %{unquote(class) => %Directions{} = directions} = tailwind,
-              unquote(string_class) <> "y-" <> value
-            ) do
-          Map.put(tailwind, unquote(class), %{directions | y: value, t: nil, b: nil})
-        end
-
-        # We can't actually do this because the required classes don't show up in text anywhere for tailwind to pick it up
-        #   for dir <- ~w(t b l r)a do
-        #     {split, to} =
-        #       if dir in [:t, :b] do
-        #         to = if dir == :t, do: :b, else: :t
-        #         {:y, to}
-        #       else
-        #         to = if dir == :l, do: :l, else: :r
-        #         {:x, to}
-        #       end
-
-        #     def merge_class(
-        #           %{unquote(class) => nil} = tailwind,
-        #           "-" <> unquote(string_class) <> unquote(to_string(dir)) <> "-" <> value
-        #         ) do
-        #       Map.put(tailwind, unquote(class), %Directions{} |> Map.put(unquote(dir), "-#{value}"))
-        #     end
-
-        #     def merge_class(
-        #           %{unquote(class) => nil} = tailwind,
-        #           unquote(string_class) <> unquote(to_string(dir)) <> "-" <> value
-        #         ) do
-        #       Map.put(tailwind, unquote(class), %Directions{} |> Map.put(unquote(dir), value))
-        #     end
-
-        #     def merge_class(
-        #           %{unquote(class) => %Directions{unquote(split) => split_value} = directions} =
-        #             tailwind,
-        #           "-" <> unquote(string_class) <> unquote(to_string(dir)) <> "-" <> value
-        #         )
-        #         when not is_nil(split_value) do
-        #       Map.put(
-        #         tailwind,
-        #         unquote(class),
-        #         directions
-        #         |> Map.put(unquote(dir), "-#{value}")
-        #         |> Map.put(unquote(to), split_value)
-        #         |> Map.put(unquote(split), nil)
-        #       )
-        #     end
-
-        #     def merge_class(
-        #           %{unquote(class) => %Directions{unquote(split) => split_value} = directions} =
-        #             tailwind,
-        #           unquote(string_class) <> unquote(to_string(dir)) <> "-" <> value
-        #         )
-        #         when not is_nil(split_value) do
-        #       Map.put(
-        #         tailwind,
-        #         unquote(class),
-        #         directions
-        #         |> Map.put(unquote(dir), value)
-        #         |> Map.put(unquote(to), split_value)
-        #         |> Map.put(unquote(split), nil)
-        #       )
-        #     end
-
-        #     def merge_class(
-        #           %{unquote(class) => %Directions{} = directions} = tailwind,
-        #           "-" <> unquote(string_class) <> unquote(to_string(dir)) <> "-" <> value
-        #         ) do
-        #       Map.put(tailwind, unquote(class), Map.put(directions, unquote(dir), "-#{value}"))
-        #     end
-
-        #     def merge_class(
-        #           %{unquote(class) => %Directions{} = directions} = tailwind,
-        #           unquote(string_class) <> unquote(to_string(dir)) <> "-" <> value
-        #         ) do
-        #       Map.put(tailwind, unquote(class), Map.put(directions, unquote(dir), value))
-        #     end
-        #   end
       end
 
-      for {key, %{values: values, prefix: prefix} = config} <- @prefixed_with_values do
+      for {class, %{prefix: string_class}} <- @directional do
+        @dirs %{
+          x: [:r, :l],
+          y: [:t, :b],
+          t: [:tl, :tr],
+          r: [:tr, :br],
+          b: [:br, :bl],
+          l: [:tl, :bl]
+        }
+
+        for {dir, clears} <- @dirs do
+          @clears Enum.map(clears, &{&1, nil})
+
+          def merge_class(
+                %{unquote(class) => nil} = tailwind,
+                unquote(string_class) <> unquote(to_string(dir)) <> "-" <> value
+              ) do
+            Map.put(tailwind, unquote(class), struct(Directions, %{unquote(dir) => value}))
+          end
+
+          def merge_class(
+                %{unquote(class) => nil} = tailwind,
+                "-" <> unquote(string_class) <> unquote(to_string(dir)) <> "-" <> value
+              ) do
+            Map.put(tailwind, unquote(class), struct(Directions, %{unquote(dir) => "-" <> value}))
+          end
+
+          def merge_class(
+                %{unquote(class) => directions} = tailwind,
+                unquote(string_class) <> unquote(to_string(dir)) <> "-" <> value
+              ) do
+            Map.put(
+              tailwind,
+              unquote(class),
+              struct(directions, [{unquote(dir), value} | @clears])
+            )
+          end
+
+          def merge_class(
+                %{unquote(class) => directions} = tailwind,
+                "-" <> unquote(string_class) <> unquote(to_string(dir)) <> "-" <> value
+              ) do
+            Map.put(
+              tailwind,
+              unquote(class),
+              struct(directions, [{unquote(dir), "-" <> value} | @clears])
+            )
+          end
+
+          def merge_class(tailwind, "-" <> unquote(string_class) <> "-" <> value) do
+            Map.put(tailwind, unquote(class), %Directions{all: "-#{value}"})
+          end
+
+          def merge_class(tailwind, unquote(string_class) <> "-" <> value) do
+            Map.put(tailwind, unquote(class), %Directions{all: value})
+          end
+        end
+
+        # def merge_class(
+        #       %{unquote(class) => %Directions{} = directions} = tailwind,
+        #       unquote(string_class) <> "x-" <> value
+        #     ) do
+        #   Map.put(tailwind, unquote(class), %{directions | x: value, l: nil, r: nil})
+        # end
+
+        # def merge_class(
+        #       %{unquote(class) => nil} = tailwind,
+        #       "-" <> unquote(string_class) <> "y-" <> value
+        #     ) do
+        #   Map.put(tailwind, unquote(class), %Directions{y: "-#{value}"})
+        # end
+
+        # def merge_class(
+        #       %{unquote(class) => nil} = tailwind,
+        #       unquote(string_class) <> "y-" <> value
+        #     ) do
+        #   Map.put(tailwind, unquote(class), %Directions{y: value})
+        # end
+
+        # def merge_class(
+        #       %{unquote(class) => %Directions{} = directions} = tailwind,
+        #       "-" <> unquote(string_class) <> "y-" <> value
+        #     ) do
+        #   Map.put(tailwind, unquote(class), %{directions | y: "-#{value}", t: nil, b: nil})
+        # end
+
+        # def merge_class(
+        #       %{unquote(class) => %Directions{} = directions} = tailwind,
+        #       unquote(string_class) <> "y-" <> value
+        #     ) do
+        #   Map.put(tailwind, unquote(class), %{directions | y: value, t: nil, b: nil})
+        # end
+      end
+
+      for {key, %{values: values, prefix: prefix} = config} <-
+            Enum.sort_by(@prefixed_with_values, fn {_, %{prefix: prefix}} ->
+              -String.length(prefix)
+            end) do
         if config[:naked?] do
           def merge_class(tailwind, unquote(prefix)) do
             Map.put(tailwind, unquote(key), "")
@@ -683,8 +996,28 @@ defmodule Tails.Custom do
         end
 
         unless config[:no_arbitrary?] do
-          def merge_class(tailwind, unquote(prefix) <> "-" <> "[" <> _ = new_value) do
-            Map.put(tailwind, unquote(key), new_value)
+          if config[:arbitrary_prefix] do
+            def merge_class(
+                  tailwind,
+                  unquote(config[:arbitrary_prefix]) <> "-" <> "[" <> new_value
+                ) do
+              Map.put(tailwind, unquote(key), "[" <> new_value)
+            end
+          else
+            def merge_class(tailwind, unquote(prefix) <> "-" <> "[" <> new_value) do
+              Map.put(tailwind, unquote(key), "[" <> new_value)
+            end
+          end
+        end
+
+        for separator <- config[:suffix_separators] || [] do
+          for body <- values do
+            def merge_class(
+                  tailwind,
+                  unquote(prefix) <> "-" <> unquote(body) <> unquote(separator) <> suffix
+                ) do
+              Map.put(tailwind, unquote(key), unquote(body) <> unquote(separator) <> suffix)
+            end
           end
         end
 
@@ -700,7 +1033,16 @@ defmodule Tails.Custom do
         end
       end
 
-      for {key, %{prefix: prefix}} <- @prefixed do
+      for {key, %{prefix: prefix} = config} <-
+            Enum.sort_by(@prefixed, fn {_, %{prefix: prefix}} ->
+              -String.length(prefix)
+            end) do
+        unless config[:no_arbitrary?] do
+          def merge_class(tailwind, unquote(prefix) <> "-" <> "[" <> _ = new_value) do
+            Map.put(tailwind, unquote(key), new_value)
+          end
+        end
+
         def merge_class(tailwind, unquote(prefix) <> "-" <> new_value) do
           Map.put(tailwind, unquote(key), new_value)
         end
@@ -766,8 +1108,13 @@ defmodule Tails.Custom do
           Enum.map(@with_values, fn {key, _} ->
             simple(Map.get(tailwind, key), tailwind.variant)
           end),
-          Enum.map(@directional, fn {key, %{prefix: prefix}} ->
-            directional(Map.get(tailwind, key), prefix, tailwind.variant)
+          Enum.map(@directional, fn {key, %{prefix: prefix} = config} ->
+            directional(Map.get(tailwind, key), prefix, !!config[:dash_suffix?], tailwind.variant)
+          end),
+          @singletons
+          |> Enum.filter(&Map.get(tailwind, &1))
+          |> Enum.map(fn class ->
+            simple(to_string(class), tailwind.variant)
           end),
           Enum.map(@prefixed_with_values, fn {key, %{prefix: prefix} = config} ->
             prefix(prefix, Map.get(tailwind, key), tailwind.variant, config[:naked?])
@@ -827,49 +1174,59 @@ defmodule Tails.Custom do
       defp prefix(prefix, value, variant, true), do: [" ", variant, ":", prefix]
       defp prefix(prefix, value, variant, _), do: [" ", variant, ":", prefix, "-", value]
 
-      defp directional(nil, _key, _), do: ""
+      defp directional(nil, _key, _, _), do: ""
 
-      defp directional("-" <> value, key, nil) do
-        [" -", key, "-", value]
-      end
-
-      defp directional(value, key, nil) when is_binary(value) do
-        [" ", key, "-", value]
-      end
-
-      defp directional("-" <> value, key, variant) do
-        [" ", variant, ":-", key, "-", value]
-      end
-
-      defp directional(value, key, variant) when is_binary(value) do
-        [" ", variant, ":", key, "-", value]
-      end
-
-      defp directional(%Directions{l: l, r: r, t: t, b: b, x: x, y: y}, key, variant) do
+      defp directional(
+             %Directions{
+               l: l,
+               r: r,
+               t: t,
+               b: b,
+               x: x,
+               y: y,
+               tl: tl,
+               tr: tr,
+               bl: bl,
+               br: br,
+               all: all
+             },
+             key,
+             dash_suffix?,
+             variant
+           ) do
         [
-          direction(t, "t", key, variant),
-          direction(b, "b", key, variant),
-          direction(l, "l", key, variant),
-          direction(r, "r", key, variant),
-          direction(x, "x", key, variant),
-          direction(y, "y", key, variant)
+          direction(all, nil, key, variant, dash_suffix?),
+          direction(tl, "tl", key, variant, dash_suffix?),
+          direction(tr, "tr", key, variant, dash_suffix?),
+          direction(bl, "bl", key, variant, dash_suffix?),
+          direction(br, "br", key, variant, dash_suffix?),
+          direction(t, "t", key, variant, dash_suffix?),
+          direction(b, "b", key, variant, dash_suffix?),
+          direction(l, "l", key, variant, dash_suffix?),
+          direction(r, "r", key, variant, dash_suffix?),
+          direction(x, "x", key, variant, dash_suffix?),
+          direction(y, "y", key, variant, dash_suffix?)
         ]
         |> Enum.filter(& &1)
       end
 
-      defp direction(nil, _, _, _), do: ""
+      defp direction(nil, _, _, _, _), do: ""
 
-      defp direction("-" <> value, suffix, prefix, nil),
-        do: [" -", prefix, suffix, "-", value]
+      defp direction("-" <> value, suffix, prefix, nil, dash_suffix?),
+        do: [" -", prefix, dash_suffix(suffix, dash_suffix?), "-", value]
 
-      defp direction(value, suffix, prefix, nil),
-        do: [" ", prefix, suffix, "-", value]
+      defp direction(value, suffix, prefix, nil, dash_suffix?),
+        do: [" ", prefix, dash_suffix(suffix, dash_suffix?), "-", value]
 
-      defp direction("-" <> value, suffix, prefix, variant),
-        do: [" ", variant, ":-", prefix, suffix, "-", value]
+      defp direction("-" <> value, suffix, prefix, variant, dash_suffix?),
+        do: [" ", variant, ":-", prefix, dash_suffix(suffix, dash_suffix?), "-", value]
 
-      defp direction(value, suffix, prefix, variant),
-        do: [" ", variant, ":", prefix, suffix, "-", value]
+      defp direction(value, suffix, prefix, variant, dash_suffix?),
+        do: [" ", variant, ":", prefix, dash_suffix(suffix, dash_suffix?), "-", value]
+
+      defp dash_suffix(value, true) when not is_nil(value), do: ["-", value]
+      defp dash_suffix(nil, _), do: ""
+      defp dash_suffix(value, _), do: value
 
       defimpl String.Chars do
         def to_string(tailwind) do

@@ -46,15 +46,6 @@ See the module docs for `Tails` to see what we currently handle
 
 Set `config :tails, :no_merge_classes, [:foo, :bar]` to avoid merging a specific set of classes. Can be useful as an escape hatch if tails is doing the wrong thing.
 
-#### Optimize Directions
-
-Set `config :tails, :optimize_directions?, true` to have tails combine directional classes when it can. For example:
-`merge("mt-1", "mb-1")` would become `"my-1"`. This is opt in because you will need to whitelist these classes
-
-#### Sigil Character
-
-You can override the sigil character by setting `config :tails, :sigil_character, "x"`, just remember that you can only use one character, upper or lower case, and it can't be one of the ones defined in `Kernel`.
-
 ## Colors
 
 When working with LiveViewNative, or in-line-styling emails, for example, you will likely want access to your tailwind colors. However, tailwind won't work in those cases. To that end, you can configure a `colors.json` file, which you would also reference in your tailwind.config.
