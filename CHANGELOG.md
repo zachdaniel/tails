@@ -5,6 +5,19 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v0.1.3](https://github.com/zachdaniel/tails/compare/v0.1.2...v0.1.3) (2022-12-28)
+
+
+
+
+### Improvements:
+
+* flesh out remaining classes, fix directional merging
+
+* automatic dark theme construction
+
+* col-span-*
+
 ## [v0.1.2](https://github.com/zachdaniel/tails/compare/v0.1.1...v0.1.2) (2022-12-22)
 
 
