@@ -660,6 +660,10 @@ defmodule Tails.Custom do
           "grid grid-cols-3 lg:grid-cols-4"
           iex> merge("font-normal text-black hover:text-blue-300", "text-gray-600 dark:text-red-400 font-bold") |> to_string()
           "font-bold text-gray-600 hover:text-blue-300 dark:text-red-400"
+          iex> merge("min-h-2", "min-h-[1rem]") |> to_string()
+          "min-h-[1rem]"
+          iex> merge("min-w-2", "min-h-[1rem]") |> to_string()
+          "min-w-2 min-h-[1rem]"
 
       Classes can be removed
 
@@ -1038,7 +1042,8 @@ defmodule Tails.Custom do
               -String.length(prefix)
             end) do
         unless config[:no_arbitrary?] do
-          def merge_class(tailwind, unquote(prefix) <> "-" <> "[" <> _ = new_value) do
+          def merge_class(tailwind, unquote(prefix) <> "-" <> "[" <> _ = value_without_suffix) do
+            unquote(prefix) <> "-" <> new_value = value_without_suffix
             Map.put(tailwind, unquote(key), new_value)
           end
         end
