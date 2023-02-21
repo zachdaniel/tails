@@ -601,7 +601,7 @@ defmodule Tails.Custom do
         |> to_string()
       end
 
-      defp new(classes) do
+      def new(classes) do
         merge(%__MODULE__{}, classes)
       end
 
@@ -895,100 +895,6 @@ defmodule Tails.Custom do
         end
       end
 
-      for {class, %{prefix: string_class}} <- @directional do
-        @dirs %{
-          x: [:r, :l],
-          y: [:t, :b],
-          t: [:tl, :tr],
-          r: [:tr, :br],
-          b: [:br, :bl],
-          l: [:tl, :bl]
-        }
-
-        for {dir, clears} <- @dirs do
-          @clears Enum.map(clears, &{&1, nil})
-
-          def merge_class(
-                %{unquote(class) => nil} = tailwind,
-                unquote(string_class) <> unquote(to_string(dir)) <> "-" <> value
-              ) do
-            Map.put(tailwind, unquote(class), struct(Directions, %{unquote(dir) => value}))
-          end
-
-          def merge_class(
-                %{unquote(class) => nil} = tailwind,
-                "-" <> unquote(string_class) <> unquote(to_string(dir)) <> "-" <> value
-              ) do
-            Map.put(tailwind, unquote(class), struct(Directions, %{unquote(dir) => "-" <> value}))
-          end
-
-          def merge_class(
-                %{unquote(class) => directions} = tailwind,
-                unquote(string_class) <> unquote(to_string(dir)) <> "-" <> value
-              ) do
-            Map.put(
-              tailwind,
-              unquote(class),
-              struct(directions, [{unquote(dir), value} | @clears])
-            )
-          end
-
-          def merge_class(
-                %{unquote(class) => directions} = tailwind,
-                "-" <> unquote(string_class) <> unquote(to_string(dir)) <> "-" <> value
-              ) do
-            Map.put(
-              tailwind,
-              unquote(class),
-              struct(directions, [{unquote(dir), "-" <> value} | @clears])
-            )
-          end
-
-          def merge_class(tailwind, "-" <> unquote(string_class) <> "-" <> value) do
-            Map.put(tailwind, unquote(class), %Directions{all: "-#{value}"})
-          end
-
-          def merge_class(tailwind, unquote(string_class) <> "-" <> value) do
-            Map.put(tailwind, unquote(class), %Directions{all: value})
-          end
-        end
-
-        # def merge_class(
-        #       %{unquote(class) => %Directions{} = directions} = tailwind,
-        #       unquote(string_class) <> "x-" <> value
-        #     ) do
-        #   Map.put(tailwind, unquote(class), %{directions | x: value, l: nil, r: nil})
-        # end
-
-        # def merge_class(
-        #       %{unquote(class) => nil} = tailwind,
-        #       "-" <> unquote(string_class) <> "y-" <> value
-        #     ) do
-        #   Map.put(tailwind, unquote(class), %Directions{y: "-#{value}"})
-        # end
-
-        # def merge_class(
-        #       %{unquote(class) => nil} = tailwind,
-        #       unquote(string_class) <> "y-" <> value
-        #     ) do
-        #   Map.put(tailwind, unquote(class), %Directions{y: value})
-        # end
-
-        # def merge_class(
-        #       %{unquote(class) => %Directions{} = directions} = tailwind,
-        #       "-" <> unquote(string_class) <> "y-" <> value
-        #     ) do
-        #   Map.put(tailwind, unquote(class), %{directions | y: "-#{value}", t: nil, b: nil})
-        # end
-
-        # def merge_class(
-        #       %{unquote(class) => %Directions{} = directions} = tailwind,
-        #       unquote(string_class) <> "y-" <> value
-        #     ) do
-        #   Map.put(tailwind, unquote(class), %{directions | y: value, t: nil, b: nil})
-        # end
-      end
-
       for {key, %{values: values, prefix: prefix} = config} <-
             Enum.sort_by(@prefixed_with_values, fn {_, %{prefix: prefix}} ->
               -String.length(prefix)
@@ -1050,6 +956,65 @@ defmodule Tails.Custom do
 
         def merge_class(tailwind, unquote(prefix) <> "-" <> new_value) do
           Map.put(tailwind, unquote(key), new_value)
+        end
+      end
+
+      for {class, %{prefix: string_class}} <- @directional do
+        @dirs %{
+          x: [:r, :l],
+          y: [:t, :b],
+          t: [:tl, :tr],
+          r: [:tr, :br],
+          b: [:br, :bl],
+          l: [:tl, :bl]
+        }
+
+        for {dir, clears} <- @dirs do
+          @clears Enum.map(clears, &{&1, nil})
+
+          def merge_class(
+                %{unquote(class) => nil} = tailwind,
+                unquote(string_class) <> unquote(to_string(dir)) <> "-" <> value
+              ) do
+            Map.put(tailwind, unquote(class), struct(Directions, %{unquote(dir) => value}))
+          end
+
+          def merge_class(
+                %{unquote(class) => nil} = tailwind,
+                "-" <> unquote(string_class) <> unquote(to_string(dir)) <> "-" <> value
+              ) do
+            Map.put(tailwind, unquote(class), struct(Directions, %{unquote(dir) => "-" <> value}))
+          end
+
+          def merge_class(
+                %{unquote(class) => directions} = tailwind,
+                unquote(string_class) <> unquote(to_string(dir)) <> "-" <> value
+              ) do
+            Map.put(
+              tailwind,
+              unquote(class),
+              struct(directions, [{unquote(dir), value} | @clears])
+            )
+          end
+
+          def merge_class(
+                %{unquote(class) => directions} = tailwind,
+                "-" <> unquote(string_class) <> unquote(to_string(dir)) <> "-" <> value
+              ) do
+            Map.put(
+              tailwind,
+              unquote(class),
+              struct(directions, [{unquote(dir), "-" <> value} | @clears])
+            )
+          end
+
+          def merge_class(tailwind, "-" <> unquote(string_class) <> "-" <> value) do
+            Map.put(tailwind, unquote(class), %Directions{all: "-#{value}"})
+          end
+
+          def merge_class(tailwind, unquote(string_class) <> "-" <> value) do
+            Map.put(tailwind, unquote(class), %Directions{all: value})
+          end
         end
       end
 
