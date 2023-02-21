@@ -664,6 +664,8 @@ defmodule Tails.Custom do
           "min-h-[1rem]"
           iex> merge("min-w-2", "min-h-[1rem]") |> to_string()
           "min-w-2 min-h-[1rem]"
+          iex> merge("border-2", "border-gray-500") |> to_string()
+          "border-2 border-gray-500"
 
       Classes can be removed
 
@@ -943,22 +945,6 @@ defmodule Tails.Custom do
         end
       end
 
-      for {key, %{prefix: prefix} = config} <-
-            Enum.sort_by(@prefixed, fn {_, %{prefix: prefix}} ->
-              -String.length(prefix)
-            end) do
-        unless config[:no_arbitrary?] do
-          def merge_class(tailwind, unquote(prefix) <> "-" <> "[" <> _ = value_without_suffix) do
-            unquote(prefix) <> "-" <> new_value = value_without_suffix
-            Map.put(tailwind, unquote(key), new_value)
-          end
-        end
-
-        def merge_class(tailwind, unquote(prefix) <> "-" <> new_value) do
-          Map.put(tailwind, unquote(key), new_value)
-        end
-      end
-
       for {class, %{prefix: string_class}} <- @directional do
         @dirs %{
           x: [:r, :l],
@@ -1015,6 +1001,22 @@ defmodule Tails.Custom do
           def merge_class(tailwind, unquote(string_class) <> "-" <> value) do
             Map.put(tailwind, unquote(class), %Directions{all: value})
           end
+        end
+      end
+
+      for {key, %{prefix: prefix} = config} <-
+            Enum.sort_by(@prefixed, fn {_, %{prefix: prefix}} ->
+              -String.length(prefix)
+            end) do
+        unless config[:no_arbitrary?] do
+          def merge_class(tailwind, unquote(prefix) <> "-" <> "[" <> _ = value_without_suffix) do
+            unquote(prefix) <> "-" <> new_value = value_without_suffix
+            Map.put(tailwind, unquote(key), new_value)
+          end
+        end
+
+        def merge_class(tailwind, unquote(prefix) <> "-" <> new_value) do
+          Map.put(tailwind, unquote(key), new_value)
         end
       end
 
