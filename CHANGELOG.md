@@ -5,6 +5,19 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v0.1.4](https://github.com/zachdaniel/tails/compare/v0.1.3...v0.1.4) (2023-03-01)
+
+
+
+
+### Bug Fixes:
+
+* do simple prefixes after directional, add doctest
+
+* do directional matching after prefixed matching
+
+* don't double-add prefix for arbitrary values
+
 ## [v0.1.3](https://github.com/zachdaniel/tails/compare/v0.1.2...v0.1.3) (2022-12-28)
 
 
