@@ -375,11 +375,9 @@ defmodule Tails.Custom do
         text_overflow: %{values: @text_overflow}
       ]
 
-      @singletons Enum.map(
-                    ~w(container content-none space-y-reverse space-x-reverse divide-y-reverse divide-x-reverse ring-inset filter-none backdrop-filter-none col-auto row-auto) ++
-                      @font_variant_numerics,
-                    &String.to_atom/1
-                  )
+      @singletons ~w(container content-none space-y-reverse space-x-reverse divide-y-reverse divide-x-reverse ring-inset filter-none backdrop-filter-none col-auto row-auto)
+                  |> Enum.concat(@font_variant_numerics)
+                  |> Enum.map(&String.to_atom/1)
 
       @prefixed [
         stroke_width: %{prefix: "stroke"},
@@ -421,7 +419,7 @@ defmodule Tails.Custom do
         rounded_tr: %{prefix: "rounded-tr", naked?: true},
         rounded_bl: %{prefix: "rounded-bl", naked?: true},
         rounded_br: %{prefix: "rounded-br", naked?: true},
-        rounded: %{prefix: "rounded", overwrites: ~w(
+        rounded: %{prefix: "rounded", naked?: true, overwrites: ~w(
           rounded_t rounded_r rounded_b rounded_l
           rounded_tl rounded_tr rounded_bl rounded_br
         )a},
@@ -666,6 +664,8 @@ defmodule Tails.Custom do
           "min-w-2 min-h-[1rem]"
           iex> merge("border-2", "border-gray-500") |> to_string()
           "border-2 border-gray-500"
+          iex> merge("rounded-lg", "rounded") |> to_string()
+          "rounded"
 
       Classes can be removed
 
@@ -1008,6 +1008,12 @@ defmodule Tails.Custom do
             Enum.sort_by(@prefixed, fn {_, %{prefix: prefix}} ->
               -String.length(prefix)
             end) do
+        if config[:naked?] do
+          def merge_class(tailwind, unquote(prefix)) do
+            Map.put(tailwind, unquote(key), "")
+          end
+        end
+
         unless config[:no_arbitrary?] do
           def merge_class(tailwind, unquote(prefix) <> "-" <> "[" <> _ = value_without_suffix) do
             unquote(prefix) <> "-" <> new_value = value_without_suffix
@@ -1091,8 +1097,8 @@ defmodule Tails.Custom do
           Enum.map(@prefixed_with_values, fn {key, %{prefix: prefix} = config} ->
             prefix(prefix, Map.get(tailwind, key), tailwind.variant, config[:naked?])
           end),
-          Enum.map(@prefixed, fn {key, %{prefix: prefix}} ->
-            prefix(prefix, Map.get(tailwind, key), tailwind.variant)
+          Enum.map(@prefixed, fn {key, %{prefix: prefix} = config} ->
+            prefix(prefix, Map.get(tailwind, key), tailwind.variant, config[:naked?])
           end)
         ]
         |> add_variants(tailwind)
