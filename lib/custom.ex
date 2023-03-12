@@ -666,6 +666,8 @@ defmodule Tails.Custom do
           "border-2 border-gray-500"
           iex> merge("rounded-lg", "rounded") |> to_string()
           "rounded"
+          iex> merge("rounded", "rounded-lg") |> to_string()
+          "rounded-lg"
 
       Classes can be removed
 
@@ -1147,9 +1149,12 @@ defmodule Tails.Custom do
 
       defp prefix(prefix, value, variant, naked? \\ false)
       defp prefix(_prefix, nil, _, _), do: ""
-      defp prefix(prefix, value, nil, true), do: [" ", prefix]
+      defp prefix(prefix, empty, nil, true) when empty in ["", nil], do: [" ", prefix]
       defp prefix(prefix, value, nil, _), do: [" ", prefix, "-", value]
-      defp prefix(prefix, value, variant, true), do: [" ", variant, ":", prefix]
+
+      defp prefix(prefix, empty, variant, true) when empty in ["", nil],
+        do: [" ", variant, ":", prefix]
+
       defp prefix(prefix, value, variant, _), do: [" ", variant, ":", prefix, "-", value]
 
       defp directional(nil, _key, _, _), do: ""
