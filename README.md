@@ -35,8 +35,7 @@ iex> merge("font-normal text-black hover:text-primary-light-300", "text-primary-
 "font-bold text-primary-600 dark:text-primary-dark-400 hover:text-primary-light-300"
 ```
 
-This merge is a "allow-list" style merge, meaning classes that we haven't thought about and/or aren't aware of a good merge strategy are just added to the end of the class list.
-There are tons of class combinations that could potentially be intelligently merged, so if you spot one that should be added just let us know!
+This merge is a "allow-list" style merge, meaning classes that we haven't thought about and/or aren't aware of a good merge strategy are just added to the end of the class list. We should have covered the tailwind spec pretty well as of March 2023.
 
 See the module docs for `Tails` to see what we currently handle
 
@@ -85,8 +84,3 @@ module.exports = {
 ```
 
 This would define `Tails.silver_phoenix()`, `Tails.base_dark()` and `Tails.base_dark_50()`, which return the respective hash code colors.
-
-
-## Installation
-
-This package is currently only available on github, as it is still experimental. 
