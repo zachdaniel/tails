@@ -516,7 +516,7 @@ defmodule Tails.Custom do
 
       ### Any values matching prefix
 
-      Any values matching the following prefixes will be merged with eachother respectively
+      Any values matching the following prefixes will be merged with each other respectively
 
       #{Tails.Doc.doc_prefixed(@prefixed)}
 
@@ -676,7 +676,7 @@ defmodule Tails.Custom do
           iex> merge("font-normal text-black", "remove:font-normal grid") |> to_string()
           "grid text-black"
 
-      All preceeding classes can be removed
+      All preceding classes can be removed
 
           iex> merge("font-normal text-black", "remove:* grid") |> to_string()
           "grid"
