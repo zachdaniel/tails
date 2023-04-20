@@ -135,7 +135,7 @@ defmodule Tails.Custom do
       @table_layouts ~w(auto fixed)
       @mix_blend_modes @blend_modes ++ ~w(plus-lighter)
       @bg_blend_modes @blend_modes
-      @border_collapse_modes ~w(collapse saturate)
+      @border_collapse_modes ~w(collapse separate)
       @transition_timing_functions ~w(ease-linear ease-in ease-out ease-in-out)
       @transition_properties ~w(none all colors opacity shadow transform)
       @animations ~w(none spin ping pulse bounce)
@@ -516,7 +516,7 @@ defmodule Tails.Custom do
 
       ### Any values matching prefix
 
-      Any values matching the following prefixes will be merged with eachother respectively
+      Any values matching the following prefixes will be merged with each other respectively
 
       #{Tails.Doc.doc_prefixed(@prefixed)}
 
@@ -668,13 +668,15 @@ defmodule Tails.Custom do
           "rounded"
           iex> merge("rounded", "rounded-lg") |> to_string()
           "rounded-lg"
+          iex> merge("border-separate", "border-spacing-1") |> to_string()
+          "border-spacing-1 border-separate"
 
       Classes can be removed
 
           iex> merge("font-normal text-black", "remove:font-normal grid") |> to_string()
           "grid text-black"
 
-      All preceeding classes can be removed
+      All preceding classes can be removed
 
           iex> merge("font-normal text-black", "remove:* grid") |> to_string()
           "grid"
