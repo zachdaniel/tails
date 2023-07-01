@@ -367,20 +367,20 @@ defmodule Tails.Colors do
   def all_color_classes(colors) do
     @builtin_colors
     |> Map.merge(colors)
-    |> Enum.flat_map(fn
+    |> color_classes("")
+  end
+
+  defp color_classes(colors, prefix) do
+    Enum.flat_map(colors, fn
+      {"DEFAULT", _value} ->
+        [prefix]
+
       {key, value} when is_binary(value) ->
-        [key]
+        if prefix == "", do: [key], else: [prefix <> "-" <> key]
 
       {key, value} when is_map(value) ->
-        value
-        |> Map.keys()
-        |> Enum.map(fn
-          "DEFAULT" ->
-            key
-
-          nested_key ->
-            key <> "-" <> nested_key
-        end)
+        new_prefix = if prefix == "", do: key, else: prefix <> "-" <> key
+        color_classes(value, new_prefix)
     end)
   end
 end
