@@ -215,11 +215,6 @@ defmodule Tails.Custom do
           doc_values_placeholder: "colors",
           suffix_separators: ["/"]
         },
-        shadow: %{
-          prefix: "shadow",
-          values: ~w(inner none),
-          suffix_separators: ["-"]
-        },
         shadow_color: %{
           prefix: "shadow",
           values: @all_colors,
@@ -401,6 +396,7 @@ defmodule Tails.Custom do
         saturate: %{prefix: "saturate"},
         invert: %{prefix: "invert", naked?: true},
         drop_shadow: %{prefix: "drop-shadow", naked?: true},
+        shadow: %{prefix: "shadow", naked?: true},
         backdrop_blur: %{prefix: "backgdrop-blur", naked?: true},
         backdrop_brightness: %{prefix: "backgdrop-brightness"},
         backdrop_contrast: %{prefix: "backgdrop-contrast"},
@@ -670,6 +666,12 @@ defmodule Tails.Custom do
           "rounded-lg"
           iex> merge("border-separate", "border-spacing-1") |> to_string()
           "border-spacing-1 border-separate"
+          iex> merge("shadow", "shadow-md") |> to_string()
+          "shadow-md"
+          iex> merge("shadow-none", "shadow-inner") |> to_string()
+          "shadow-inner"
+          iex> merge("shadow-lg", "shadow") |> to_string()
+          "shadow"
 
       Classes can be removed
 
