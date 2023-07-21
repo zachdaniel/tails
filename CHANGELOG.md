@@ -5,6 +5,23 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v0.1.6](https://github.com/zachdaniel/tails/compare/v0.1.5...v0.1.6) (2023-07-21)
+
+
+
+
+### Bug Fixes:
+
+* shadows merge (#10)
+
+### Improvements:
+
+* remove colors that don't exist in tailwind spec
+
+* massively speed up compile times for color classes
+
+* support deeply-nested theme colors (#7)
+
 ## [v0.1.5](https://github.com/zachdaniel/tails/compare/v0.1.4...v0.1.5) (2023-04-30)
 
 
