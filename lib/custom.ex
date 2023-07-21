@@ -185,103 +185,6 @@ defmodule Tails.Custom do
         text_align: %{prefix: "text", values: @text_alignments},
         vertical_align: %{prefix: "align", values: @vertical_alignments},
         text_decoration_style: %{prefix: "decoration", values: @text_decoration_styles},
-        fill_color: %{
-          prefix: "fill",
-          values: @all_colors,
-          doc_values_placeholder: "colors",
-          suffix_separators: ["/"]
-        },
-        outline_color: %{
-          prefix: "outline",
-          values: @all_colors,
-          doc_values_placeholder: "colors",
-          suffix_separators: ["/"]
-        },
-        caret_color: %{
-          prefix: "caret",
-          values: @all_colors,
-          doc_values_placeholder: "colors",
-          suffix_separators: ["/"]
-        },
-        accent_color: %{
-          prefix: "accent",
-          values: @all_colors,
-          doc_values_placeholder: "colors",
-          suffix_separators: ["/"]
-        },
-        ring_color: %{
-          prefix: "ring",
-          values: @all_colors,
-          doc_values_placeholder: "colors",
-          suffix_separators: ["/"]
-        },
-        shadow_color: %{
-          prefix: "shadow",
-          values: @all_colors,
-          doc_values_placeholder: "colors",
-          suffix_separators: ["/"]
-        },
-        ring_offset_color: %{
-          prefix: "ring-offset",
-          values: @all_colors,
-          doc_values_placeholder: "colors",
-          suffix_separators: ["/"]
-        },
-        divide_color: %{
-          prefix: "divide",
-          values: @all_colors,
-          doc_values_placeholder: "colors",
-          suffix_separators: ["/"]
-        },
-        border_color: %{
-          prefix: "border",
-          values: @all_colors,
-          doc_values_placeholder: "colors",
-          overwrites: ~w(border_color_y border_color_x)a,
-          suffix_separators: ["/"]
-        },
-        border_color_y: %{
-          prefix: "border-y",
-          values: @all_colors,
-          doc_values_placeholder: "colors",
-          suffix_separators: ["/"]
-        },
-        border_color_x: %{
-          prefix: "border-x",
-          values: @all_colors,
-          doc_values_placeholder: "colors",
-          suffix_separators: ["/"]
-        },
-        border_color_t: %{
-          prefix: "border-t",
-          values: @all_colors,
-          doc_values_placeholder: "colors",
-          suffix_separators: ["/"]
-        },
-        border_color_r: %{
-          prefix: "border-r",
-          values: @all_colors,
-          doc_values_placeholder: "colors",
-          suffix_separators: ["/"]
-        },
-        border_color_b: %{
-          prefix: "border-b",
-          values: @all_colors,
-          doc_values_placeholder: "colors",
-          suffix_separators: ["/"]
-        },
-        border_color_l: %{
-          prefix: "border-l",
-          values: @all_colors,
-          doc_values_placeholder: "colors",
-          suffix_separators: ["/"]
-        },
-        text_decoration_color: %{
-          prefix: "decoration",
-          values: @all_colors,
-          doc_values_placeholder: "colors",
-          suffix_separators: ["/"]
-        },
         list_style_type: %{prefix: "list", values: @list_style_types},
         list_style_position: %{prefix: "list", values: @list_style_positions},
         tracking: %{prefix: "tracking", values: @trackings},
@@ -336,20 +239,29 @@ defmodule Tails.Custom do
         bg_origin: %{prefix: "bg-origin", values: @bg_origins},
         bg_clip: %{prefix: "bg-clip", values: @bg_clips},
         bg_image: %{prefix: "bg", values: @bg_images},
-        bg: %{
-          prefix: "bg",
-          values: @all_colors,
-          doc_values_placeholder: "colors",
-          suffix_separators: ["/"]
-        },
-        text_color: %{
-          prefix: "text",
-          values: @all_colors,
-          doc_values_placeholder: "colors",
-          suffix_separators: ["/"]
-        },
         bg_attachment: %{prefix: "bg", values: @bg_attachments},
         col: %{prefix: "col", values: ~w(auto)}
+      ]
+
+      @prefixed_with_colors [
+        fill_color: %{prefix: "fill"},
+        outline_color: %{prefix: "outline"},
+        caret_color: %{prefix: "caret"},
+        accent_color: %{prefix: "accent"},
+        ring_color: %{prefix: "ring"},
+        shadow_color: %{prefix: "shadow"},
+        ring_offset_color: %{prefix: "ring-offset"},
+        divide_color: %{prefix: "divide"},
+        border_color: %{prefix: "border", overwrites: ~w(border_color_y border_color_x)a},
+        border_color_y: %{prefix: "border-y"},
+        border_color_x: %{prefix: "border-x"},
+        border_color_t: %{prefix: "border-t"},
+        border_color_r: %{prefix: "border-r"},
+        border_color_b: %{prefix: "border-b"},
+        border_color_l: %{prefix: "border-l"},
+        text_decoration_color: %{prefix: "decoration"},
+        bg: %{prefix: "bg"},
+        text_color: %{prefix: "text"}
       ]
 
       @with_values [
@@ -509,6 +421,7 @@ defmodule Tails.Custom do
 
       #{Tails.Doc.doc_with_values(@with_values)}
       #{Tails.Doc.doc_prefix_with_values(@prefixed_with_values)}
+      #{Tails.Doc.doc_prefixed_with_colors(@prefixed_with_colors)}
 
       ### Any values matching prefix
 
@@ -526,6 +439,7 @@ defmodule Tails.Custom do
       defstruct Keyword.keys(@directional) ++
                   Keyword.keys(@prefixed) ++
                   Keyword.keys(@with_values) ++
+                  Keyword.keys(@prefixed_with_colors) ++
                   Keyword.keys(@prefixed_with_values) ++
                   @singletons ++
                   [
@@ -645,7 +559,7 @@ defmodule Tails.Custom do
           iex> merge("block absolute", "fixed hidden") |> to_string()
           "fixed hidden"
           iex> merge("bg-blue-500", "bg-auto") |> to_string()
-          "bg-auto bg-blue-500"
+          "bg-blue-500 bg-auto"
           iex> merge("bg-auto", "bg-repeat-x") |> to_string()
           "bg-auto bg-repeat-x"
           iex> merge("bg-blue-500", "bg-red-400") |> to_string()
@@ -653,7 +567,7 @@ defmodule Tails.Custom do
           iex> merge("grid grid-cols-2 lg:grid-cols-3", "grid-cols-3 lg:grid-cols-4") |> to_string()
           "grid grid-cols-3 lg:grid-cols-4"
           iex> merge("font-normal text-black hover:text-blue-300", "text-gray-600 dark:text-red-400 font-bold") |> to_string()
-          "font-bold text-gray-600 hover:text-blue-300 dark:text-red-400"
+          "text-gray-600 font-bold hover:text-blue-300 dark:text-red-400"
           iex> merge("min-h-2", "min-h-[1rem]") |> to_string()
           "min-h-[1rem]"
           iex> merge("min-w-2", "min-h-[1rem]") |> to_string()
@@ -839,8 +753,8 @@ defmodule Tails.Custom do
         end
       end
 
-      # Then match on each theme as a potential fallback theme
-      # We don't check for a matching dark theme when falling back
+      # # Then match on each theme as a potential fallback theme
+      # # We don't check for a matching dark theme when falling back
       for {theme, key, replacement} <- replacements do
         def merge_class(%{fallback: theme} = tailwind, unquote(to_string(key)))
             when theme in [unquote(theme), unquote(to_string(theme))] do
@@ -928,19 +842,22 @@ defmodule Tails.Custom do
           end
         end
 
-        for separator <- config[:suffix_separators] || [] do
-          for body <- values do
-            def merge_class(
-                  tailwind,
-                  unquote(prefix) <> "-" <> unquote(body) <> unquote(separator) <> suffix
-                ) do
-              Map.put(tailwind, unquote(key), unquote(body) <> unquote(separator) <> suffix)
-            end
-          end
+        def merge_class(tailwind, unquote(prefix) <> "-" <> new_value)
+            when new_value in unquote(values) do
+          Map.put(tailwind, unquote(key), new_value)
+        end
+      end
+
+      for {key, %{prefix: prefix} = config} <-
+            Enum.sort_by(@prefixed_with_colors, fn {_, %{prefix: prefix}} ->
+              -String.length(prefix)
+            end) do
+        def merge_class(tailwind, unquote(prefix) <> "-" <> "[" <> new_value) do
+          Map.put(tailwind, unquote(key), "[" <> new_value)
         end
 
         def merge_class(tailwind, unquote(prefix) <> "-" <> new_value)
-            when new_value in unquote(values) do
+            when new_value in @all_colors do
           Map.put(tailwind, unquote(key), new_value)
         end
       end
@@ -1100,6 +1017,9 @@ defmodule Tails.Custom do
           |> Enum.map(fn class ->
             simple(to_string(class), tailwind.variant)
           end),
+          Enum.map(@prefixed_with_colors, fn {key, %{prefix: prefix} = config} ->
+            prefix(prefix, Map.get(tailwind, key), tailwind.variant, false)
+          end),
           Enum.map(@prefixed_with_values, fn {key, %{prefix: prefix} = config} ->
             prefix(prefix, Map.get(tailwind, key), tailwind.variant, config[:naked?])
           end),
@@ -1244,21 +1164,21 @@ defmodule Tails.Custom do
         end
       end
 
-      for {key, value} when is_map(value) <- @colors do
-        for {suffix, value} when is_binary(value) <- value do
-          if suffix == "DEFAULT" do
-            # sobelow_skip ["DOS.BinToAtom"]
-            def unquote(:"#{String.replace(key, "-", "_")}")() do
-              unquote(value)
-            end
-          else
-            # sobelow_skip ["DOS.BinToAtom"]
-            def unquote(:"#{String.replace(key, "-", "_")}_#{String.replace(suffix, "-", "_")}")() do
-              unquote(value)
-            end
-          end
-        end
-      end
+      # for {key, value} when is_map(value) <- @colors do
+      #   for {suffix, value} when is_binary(value) <- value do
+      #     if suffix == "DEFAULT" do
+      #       # sobelow_skip ["DOS.BinToAtom"]
+      #       def unquote(:"#{String.replace(key, "-", "_")}")() do
+      #         unquote(value)
+      #       end
+      #     else
+      #       # sobelow_skip ["DOS.BinToAtom"]
+      #       def unquote(:"#{String.replace(key, "-", "_")}_#{String.replace(suffix, "-", "_")}")() do
+      #         unquote(value)
+      #       end
+      #     end
+      #   end
+      # end
     end
   end
 

@@ -17,12 +17,15 @@ defmodule Tails.Doc do
 
   def doc_prefix_with_values(prefix_with_values) do
     prefix_with_values
-    |> Enum.map_join("\n", fn {key, %{prefix: prefix, values: values} = config} ->
-      if config[:doc_values_placeholder] do
-        "- #{to_title(key)} - " <> config[:doc_values_placeholder]
-      else
-        "- #{to_title(key)} - " <> Enum.map_join(values, ", ", &"`#{prefix}-#{&1}`")
-      end
+    |> Enum.map_join("\n", fn {key, %{prefix: prefix, values: values}} ->
+      "- #{to_title(key)} - " <> Enum.map_join(values, ", ", &"`#{prefix}-#{&1}`")
+    end)
+  end
+
+  def doc_prefixed_with_colors(prefixed_with_colors) do
+    prefixed_with_colors
+    |> Enum.map_join("\n", fn {key, %{prefix: prefix}} ->
+      "- #{to_title(key)} - prefix `#{prefix}-`: colors"
     end)
   end
 
