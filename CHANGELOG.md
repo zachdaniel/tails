@@ -5,6 +5,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v0.1.7](https://github.com/zachdaniel/tails/compare/v0.1.6...v0.1.7) (2023-08-26)
+
+
+
+
+### Bug Fixes:
+
+* handle color opacity suffixes
+
 ## [v0.1.6](https://github.com/zachdaniel/tails/compare/v0.1.5...v0.1.6) (2023-07-21)
 
 
