@@ -6,7 +6,9 @@ defmodule Tails.ColorClasses do
         [prefix]
 
       {key, value} when is_binary(value) ->
-        if prefix == "", do: [key], else: [prefix <> "-" <> key]
+        if prefix == "",
+          do: [key],
+          else: [prefix <> "-" <> key]
 
       {key, value} when is_map(value) ->
         new_prefix = if prefix == "", do: key, else: prefix <> "-" <> key

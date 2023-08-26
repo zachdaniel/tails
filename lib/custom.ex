@@ -56,6 +56,8 @@ defmodule Tails.Custom do
 
       @all_colors Tails.Colors.all_color_classes(@colors)
 
+      @colors_by_size @all_colors |> Enum.group_by(&byte_size/1)
+
       @variants ~w(
         hover focus focus-within focus-visible active visited target first last only odd
         even first-of-type last-of-type only-of-type empty disabled enabled checked
@@ -207,15 +209,13 @@ defmodule Tails.Custom do
         flex_wrap: %{prefix: "flex", values: @flex_wraps},
         overflow: %{
           prefix: "overflow",
-          values: @overflows,
-          overwrites: ~w(overflow_x overflow_y)a
+          values: @overflows
         },
         overflow_x: %{prefix: "overflow-x", values: @overflows},
         overflow_y: %{prefix: "overflow-y", values: @overflows},
         overscroll: %{
           prefix: "overscroll",
-          values: @overscrolls,
-          overwrites: ~w(overscroll_x overscroll_y)a
+          values: @overscrolls
         },
         overscroll_x: %{prefix: "overscroll-x", values: @overscrolls},
         overscroll_y: %{prefix: "overscroll-y", values: @overscrolls},
@@ -252,7 +252,7 @@ defmodule Tails.Custom do
         shadow_color: %{prefix: "shadow"},
         ring_offset_color: %{prefix: "ring-offset"},
         divide_color: %{prefix: "divide"},
-        border_color: %{prefix: "border", overwrites: ~w(border_color_y border_color_x)a},
+        border_color: %{prefix: "border"},
         border_color_y: %{prefix: "border-y"},
         border_color_x: %{prefix: "border-x"},
         border_color_t: %{prefix: "border-t"},
@@ -318,24 +318,21 @@ defmodule Tails.Custom do
         backdrop_saturate: %{prefix: "backgdrop-saturate"},
         backdrop_invert: %{prefix: "backgdrop-invert", naked?: true},
         backdrop_opacity: %{prefix: "backdrop-opacity"},
-        ring_width: %{prefix: "ring", naked?: true},
-        rounded_t: %{prefix: "rounded-t", naked?: true, overwrites: ~w(rounded_tl rounded_tr)a},
-        rounded_r: %{prefix: "rounded-r", naked?: true, overwrites: ~w(rounded_tr rounded_br)a},
-        rounded_b: %{prefix: "rounded-b", naked?: true, overwrites: ~w(rounded_bl rounded_br)a},
-        rounded_l: %{prefix: "rounded-l", naked?: true, overwrites: ~w(rounded_tl rounded_bl)a},
+        ring_width: %{prefix: "ring", naked?: true, wont_overwrite: ~w(ring-inset)},
+        rounded_t: %{prefix: "rounded-t", naked?: true},
+        rounded_r: %{prefix: "rounded-r", naked?: true},
+        rounded_b: %{prefix: "rounded-b", naked?: true},
+        rounded_l: %{prefix: "rounded-l", naked?: true},
         rounded_tl: %{prefix: "rounded-tl", naked?: true},
         rounded_tr: %{prefix: "rounded-tr", naked?: true},
         rounded_bl: %{prefix: "rounded-bl", naked?: true},
         rounded_br: %{prefix: "rounded-br", naked?: true},
-        rounded: %{prefix: "rounded", naked?: true, overwrites: ~w(
-          rounded_t rounded_r rounded_b rounded_l
-          rounded_tl rounded_tr rounded_bl rounded_br
-        )a},
+        rounded: %{prefix: "rounded", naked?: true},
         underline_offset: %{prefix: "underline-offset"},
         text_decoration_thickness: %{prefix: "decoration"},
         text_indent: %{prefix: "indent"},
         leading: %{prefix: "leading"},
-        gap: %{prefix: "gap", overwrites: ~w(gap_x gap_y)a},
+        gap: %{prefix: "gap"},
         gap_x: %{prefix: "gap-x"},
         gap_y: %{prefix: "gap-y"},
         order: %{prefix: "order"},
@@ -347,9 +344,9 @@ defmodule Tails.Custom do
         right: %{prefix: "right"},
         top: %{prefix: "top"},
         bottom: %{prefix: "bottom"},
-        inset: %{prefix: "inset", overwrites: ~w(inset_x inset_y top right bottom left)a},
-        inset_y: %{prefix: "inset-y", overwrites: ~w(top bottom)a},
-        inset_x: %{prefix: "inset-x", overwrites: ~w(right left)a},
+        inset: %{prefix: "inset"},
+        inset_y: %{prefix: "inset-y"},
+        inset_x: %{prefix: "inset-x"},
         columns: %{prefix: "columns"},
         col_span: %{prefix: "col-span"},
         col_start: %{prefix: "col-start"},
@@ -586,6 +583,8 @@ defmodule Tails.Custom do
           "shadow-inner"
           iex> merge("shadow-lg", "shadow") |> to_string()
           "shadow"
+          iex> merge("bg-gray-50 text-gray-600", "ring-1 ring-inset ring-gray-500/10") |> to_string()
+          "ring-inset ring-gray-500/10 bg-gray-50 text-gray-600 ring-1"
 
       Classes can be removed
 
@@ -848,6 +847,8 @@ defmodule Tails.Custom do
         end
       end
 
+      @one_through_one_hundred 1..100 |> Enum.map(&to_string/1) |> Enum.take(11)
+
       for {key, %{prefix: prefix} = config} <-
             Enum.sort_by(@prefixed_with_colors, fn {_, %{prefix: prefix}} ->
               -String.length(prefix)
@@ -859,6 +860,17 @@ defmodule Tails.Custom do
         def merge_class(tailwind, unquote(prefix) <> "-" <> new_value)
             when new_value in @all_colors do
           Map.put(tailwind, unquote(key), new_value)
+        end
+
+        for {size, colors} <- @colors_by_size do
+          def merge_class(
+                tailwind,
+                unquote(prefix) <>
+                  "-" <> <<new_value::binary-size(unquote(size))>> <> "/" <> suffix
+              )
+              when new_value in unquote(colors) do
+            Map.put(tailwind, unquote(key), new_value <> "/" <> suffix)
+          end
         end
       end
 
