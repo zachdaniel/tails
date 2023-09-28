@@ -32,12 +32,18 @@ defmodule Tails.Custom do
         @dark_themes dark_themes || Application.compile_env(otp_app, :dark_themes)
         @themes themes || Application.compile_env(otp_app, :themes)
         @custom_variants Application.compile_env(otp_app, :variants) || []
+        @warn_on_interpolation Application.compile_env(otp_app, :warn_on_interpolation?, true)
       else
         @colors_file Application.compile_env(otp_app, __MODULE__)[:colors_file]
         @no_merge_classes Application.compile_env(otp_app, __MODULE__)[:no_merge_classes] || []
         @dark_themes dark_themes || Application.compile_env(otp_app, __MODULE__)[:dark_themes]
         @themes themes || Application.compile_env(otp_app, __MODULE__)[:themes]
         @custom_variants Application.compile_env(otp_app, __MODULE__)[:variants] || []
+        @warn_on_interpolation Keyword.get(
+                                 Application.compile_env(otp_app, __MODULE__) || [],
+                                 :warn_on_interpolation?,
+                                 true
+                               )
       end
 
       @colors (if @colors_file do
@@ -468,7 +474,7 @@ defmodule Tails.Custom do
       @type t :: %__MODULE__{}
 
       @doc """
-      Builds a class string out of a mixed list of inputs or a string.
+      Builds a class string out of a mixed list of inputs or a string. You can use the `~t` sigil as a shortcut.
 
       If the value is a string, we make a new `Tails` with it (essentially deduplicating it).
 
@@ -504,6 +510,20 @@ defmodule Tails.Custom do
         classes
         |> new()
         |> to_string()
+      end
+
+      @doc """
+      Builds a class string out of a mixed list of inputs or a string.
+
+      See `classes/1` for more information.
+
+          iex> ~t([[a: true, b: false], [c: false, d: true]])
+          "a d"
+      """
+      defmacro sigil_t(contents, _flags) do
+        quote do
+          classes([Code.eval_string(unquote(contents), []) |> elem(0)])
+        end
       end
 
       def new(classes) do
