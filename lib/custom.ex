@@ -190,7 +190,7 @@ defmodule Tails.Custom do
         border_style: %{prefix: "border", values: @border_styles},
         word_breaks: %{prefix: "break", values: @word_breaks},
         whitespace: %{prefix: "whitespace", values: @whitespaces},
-        text_align: %{prefix: "text", values: @text_alignments},
+        text_align: %{prefix: "text", values: @text_alignments, no_arbitrary?: true},
         vertical_align: %{prefix: "align", values: @vertical_alignments},
         text_decoration_style: %{prefix: "decoration", values: @text_decoration_styles},
         list_style_type: %{prefix: "list", values: @list_style_types},
@@ -387,6 +387,26 @@ defmodule Tails.Custom do
         border_width: %{prefix: "border", dash_suffix?: true},
         border_spacing: %{prefix: "border-spacing", dash_suffix?: true}
       ]
+
+      @browser_color_values ~w(
+        silver gray white maroon red purple fuchsia green lime olive yellow navy blue teal aqua aliceblue
+        antiquewhite aqua aquamarine azure beige bisque black blanchedalmond blue blueviolet brown burlywood
+        cadetblue chartreuse chocolate coral cornflowerblue cornsilk crimson cyan darkblue darkcyan darkgoldenrod
+        darkgray darkgreen darkgrey darkkhaki darkmagenta darkolivegreen darkorange darkorchid darkred darksalmon
+        darkseagreen darkslateblue darkslategray darkslategrey darkturquoise darkviolet deeppink deepskyblue dimgray
+        dimgrey dodgerblue firebrick floralwhite forestgreen fuchsia gainsboro ghostwhite gold goldenrod gray
+        green greenyellow grey honeydew hotpink indianred indigo ivory khaki lavender lavenderblush lawngreen
+        lemonchiffon lightblue lightcoral lightcyan lightgoldenrodyellow lightgray lightgreen lightgrey lightpink
+        lightsalmon lightseagreen lightskyblue lightslategray lightslategrey lightsteelblue lightyellow lime limegreen
+        linen magenta maroon mediumaquamarine mediumblue mediumorchid mediumpurple mediumseagreen mediumslateblue
+        mediumspringgreen mediumturquoise mediumvioletred midnightblue mintcream mistyrose moccasin navajowhite navy
+        oldlace olive olivedrab orange orangered orchid palegoldenrod palegreen paleturquoise palevioletred papayawhip
+        peachpuff peru pink plum powderblue purple red rosybrown royalblue saddlebrown salmon sandybrown seagreen
+        seashell sienna silver skyblue slateblue slategray slategrey snow springgreen steelblue tan teal thistle
+        tomato turquoise violet wheat white whitesmoke yellow yellowgreen
+      )
+
+      @browser_color_prefixes ~w[# rgb( rgba( hsl( hsla(]
 
       @moduledoc """
       Tailwind class utilities like class merging.
@@ -605,6 +625,12 @@ defmodule Tails.Custom do
           "shadow"
           iex> merge("bg-gray-50 text-gray-600", "ring-1 ring-inset ring-gray-500/10") |> to_string()
           "ring-inset ring-gray-500/10 bg-gray-50 text-gray-600 ring-1"
+          iex> merge("text-xl", "text-[16px]") |> to_string()
+          "text-[16px]"
+          iex> merge("text-white", "text-[#000]") |> to_string()
+          "text-[#000]"
+          iex> merge("text-center text-xl text-white", "text-[16px] text-[#000]") |> to_string()
+          "text-[#000] text-center text-[16px]"
 
       Classes can be removed
 
@@ -850,12 +876,12 @@ defmodule Tails.Custom do
           if config[:arbitrary_prefix] do
             def merge_class(
                   tailwind,
-                  unquote(config[:arbitrary_prefix]) <> "-" <> "[" <> new_value
+                  unquote(config[:arbitrary_prefix]) <> "-[" <> new_value
                 ) do
               Map.put(tailwind, unquote(key), "[" <> new_value)
             end
           else
-            def merge_class(tailwind, unquote(prefix) <> "-" <> "[" <> new_value) do
+            def merge_class(tailwind, unquote(prefix) <> "-[" <> new_value) do
               Map.put(tailwind, unquote(key), "[" <> new_value)
             end
           end
@@ -873,8 +899,21 @@ defmodule Tails.Custom do
             Enum.sort_by(@prefixed_with_colors, fn {_, %{prefix: prefix}} ->
               -String.length(prefix)
             end) do
-        def merge_class(tailwind, unquote(prefix) <> "-" <> "[" <> new_value) do
-          Map.put(tailwind, unquote(key), "[" <> new_value)
+        for color_prefix <- @browser_color_prefixes do
+          def merge_class(
+                tailwind,
+                unquote(prefix) <> "-" <> "[" <> unquote(color_prefix) <> new_value
+              ) do
+            Map.put(tailwind, unquote(key), "[#{unquote(color_prefix)}" <> new_value)
+          end
+        end
+
+        for color_value <- @browser_color_values do
+          match = "[#{color_value}]"
+
+          def merge_class(tailwind, unquote(prefix) <> "-" <> unquote(match)) do
+            Map.put(tailwind, unquote(key), unquote(match))
+          end
         end
 
         def merge_class(tailwind, unquote(prefix) <> "-" <> new_value)
