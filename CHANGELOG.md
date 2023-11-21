@@ -5,6 +5,19 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v0.1.8](https://github.com/zachdaniel/tails/compare/v0.1.7...v0.1.8) (2023-11-21)
+
+
+
+
+### Bug Fixes:
+
+* identify and merge known custom color values only
+
+### Improvements:
+
+* add `~t` sigil
+
 ## [v0.1.7](https://github.com/zachdaniel/tails/compare/v0.1.6...v0.1.7) (2023-08-26)
 
 
