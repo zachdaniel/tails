@@ -631,6 +631,10 @@ defmodule Tails.Custom do
           "text-[#000]"
           iex> merge("text-center text-xl text-white", "text-[16px] text-[#000]") |> to_string()
           "text-[#000] text-center text-[16px]"
+          iex> merge("border-b-4 border-opacity-20") |> to_string()
+          "border-b-4 border-opacity-20"
+          iex> merge("border-black border-b-4 border-opacity-20") |> to_string()
+          "border-black border-b-4 border-opacity-20"
 
       Classes can be removed
 
