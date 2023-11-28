@@ -107,4 +107,11 @@ defmodule TailsTest do
       refute "theme-vibrant-color_d" in classes
     end
   end
+
+  describe "Tails.classes" do
+    test "border-b-* and border-opacity-* do not override one another" do
+      refute Tails.classes(["border-b-4 border-opacity-20"]) == "border-opacity-20"
+      refute Tails.classes(["border-opacity-20 border-b-4"]) == "border-b-4"
+    end
+  end
 end

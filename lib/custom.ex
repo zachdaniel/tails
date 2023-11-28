@@ -315,15 +315,16 @@ defmodule Tails.Custom do
         invert: %{prefix: "invert", naked?: true},
         drop_shadow: %{prefix: "drop-shadow", naked?: true},
         shadow: %{prefix: "shadow", naked?: true},
-        backdrop_blur: %{prefix: "backgdrop-blur", naked?: true},
-        backdrop_brightness: %{prefix: "backgdrop-brightness"},
-        backdrop_contrast: %{prefix: "backgdrop-contrast"},
-        backdrop_sepia: %{prefix: "backgdrop-sepia"},
-        backdrop_hue_rotate: %{prefix: "backgdrop-hue-rotate"},
-        backdrop_grayscale: %{prefix: "backgdrop-grayscale", naked?: true},
-        backdrop_saturate: %{prefix: "backgdrop-saturate"},
-        backdrop_invert: %{prefix: "backgdrop-invert", naked?: true},
+        backdrop_blur: %{prefix: "backdrop-blur", naked?: true},
+        backdrop_brightness: %{prefix: "backdrop-brightness"},
+        backdrop_contrast: %{prefix: "backdrop-contrast"},
+        backdrop_sepia: %{prefix: "backdrop-sepia"},
+        backdrop_hue_rotate: %{prefix: "backdrop-hue-rotate"},
+        backdrop_grayscale: %{prefix: "backdrop-grayscale", naked?: true},
+        backdrop_saturate: %{prefix: "backdrop-saturate"},
+        backdrop_invert: %{prefix: "backdrop-invert", naked?: true},
         backdrop_opacity: %{prefix: "backdrop-opacity"},
+        border_opacity: %{prefix: "border-opacity"},
         ring_width: %{prefix: "ring", naked?: true, wont_overwrite: ~w(ring-inset)},
         rounded_t: %{prefix: "rounded-t", naked?: true},
         rounded_r: %{prefix: "rounded-r", naked?: true},
@@ -943,6 +944,28 @@ defmodule Tails.Custom do
         end
       end
 
+      for {key, %{prefix: prefix} = config} <-
+            Enum.sort_by(@prefixed, fn {_, %{prefix: prefix}} ->
+              -String.length(prefix)
+            end) do
+        if config[:naked?] do
+          def merge_class(tailwind, unquote(prefix)) do
+            Map.put(tailwind, unquote(key), "")
+          end
+        end
+
+        unless config[:no_arbitrary?] do
+          def merge_class(tailwind, unquote(prefix) <> "-" <> "[" <> _ = value_without_suffix) do
+            unquote(prefix) <> "-" <> new_value = value_without_suffix
+            Map.put(tailwind, unquote(key), new_value)
+          end
+        end
+
+        def merge_class(tailwind, unquote(prefix) <> "-" <> new_value) do
+          Map.put(tailwind, unquote(key), new_value)
+        end
+      end
+
       for {class, %{prefix: string_class}} <- @directional do
         @dirs %{
           x: [:r, :l],
@@ -991,14 +1014,6 @@ defmodule Tails.Custom do
               struct(directions, [{unquote(dir), "-" <> value} | @clears])
             )
           end
-
-          def merge_class(tailwind, "-" <> unquote(string_class) <> "-" <> value) do
-            Map.put(tailwind, unquote(class), %Directions{all: "-#{value}"})
-          end
-
-          def merge_class(tailwind, unquote(string_class) <> "-" <> value) do
-            Map.put(tailwind, unquote(class), %Directions{all: value})
-          end
         end
       end
 
@@ -1021,6 +1036,27 @@ defmodule Tails.Custom do
 
         def merge_class(tailwind, unquote(prefix) <> "-" <> new_value) do
           Map.put(tailwind, unquote(key), new_value)
+        end
+      end
+
+      for {class, %{prefix: string_class}} <- @directional do
+        @dirs %{
+          x: [:r, :l],
+          y: [:t, :b],
+          t: [:tl, :tr],
+          r: [:tr, :br],
+          b: [:br, :bl],
+          l: [:tl, :bl]
+        }
+
+        for {dir, clears} <- @dirs do
+          def merge_class(tailwind, "-" <> unquote(string_class) <> "-" <> value) do
+            Map.put(tailwind, unquote(class), %Directions{all: "-#{value}"})
+          end
+
+          def merge_class(tailwind, unquote(string_class) <> "-" <> value) do
+            Map.put(tailwind, unquote(class), %Directions{all: value})
+          end
         end
       end
 
