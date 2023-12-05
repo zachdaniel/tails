@@ -847,7 +847,7 @@ defmodule Tails.Custom do
           last = List.last(rest)
           variants = :lists.droplast(rest)
 
-          key = Enum.sort([unquote(modifier) | variants])
+          key = [unquote(modifier) | variants]
 
           if Map.has_key?(tailwind.variants, key) do
             %{tailwind | variants: Map.update!(tailwind.variants, key, &merge_class(&1, last))}
