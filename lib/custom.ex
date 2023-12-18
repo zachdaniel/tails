@@ -966,7 +966,7 @@ defmodule Tails.Custom do
         end
       end
 
-      for {class, %{prefix: string_class}} <- @directional do
+      for {class, %{prefix: string_class} = config} <- @directional do
         @dirs %{
           x: [:r, :l],
           y: [:t, :b],
@@ -977,25 +977,32 @@ defmodule Tails.Custom do
         }
 
         for {dir, clears} <- @dirs do
+          string_dir =
+            if config[:dash_suffix?] do
+              "-" <> to_string(dir)
+            else
+              to_string(dir)
+            end
+
           @clears Enum.map(clears, &{&1, nil})
 
           def merge_class(
                 %{unquote(class) => nil} = tailwind,
-                unquote(string_class) <> unquote(to_string(dir)) <> "-" <> value
+                unquote(string_class) <> unquote(string_dir) <> "-" <> value
               ) do
             Map.put(tailwind, unquote(class), struct(Directions, %{unquote(dir) => value}))
           end
 
           def merge_class(
                 %{unquote(class) => nil} = tailwind,
-                "-" <> unquote(string_class) <> unquote(to_string(dir)) <> "-" <> value
+                "-" <> unquote(string_class) <> unquote(string_dir) <> "-" <> value
               ) do
             Map.put(tailwind, unquote(class), struct(Directions, %{unquote(dir) => "-" <> value}))
           end
 
           def merge_class(
                 %{unquote(class) => directions} = tailwind,
-                unquote(string_class) <> unquote(to_string(dir)) <> "-" <> value
+                unquote(string_class) <> unquote(string_dir) <> "-" <> value
               ) do
             Map.put(
               tailwind,
@@ -1006,7 +1013,7 @@ defmodule Tails.Custom do
 
           def merge_class(
                 %{unquote(class) => directions} = tailwind,
-                "-" <> unquote(string_class) <> unquote(to_string(dir)) <> "-" <> value
+                "-" <> unquote(string_class) <> unquote(string_dir) <> "-" <> value
               ) do
             Map.put(
               tailwind,
