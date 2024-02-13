@@ -47,7 +47,31 @@ Set `config :tails, :no_merge_classes, [:foo, :bar]` to avoid merging a specific
 
 ## Colors
 
-When working with LiveViewNative, or in-line-styling emails, for example, you will likely want access to your tailwind colors. However, tailwind won't work in those cases. To that end, you can configure a `colors.json` file, which you would also reference in your tailwind.config.
+We use custom defined colors for two things:
+
+1. providing class name helpers for use in other contexts
+2. merging custom color values, for example so that we know that adding `bg-specialred` should remove `bg-specialblue`.
+
+If you *don't* do this, there are certain cases that we are currently unable to disambiguate. For example, if you have a custom font size utility, i.e `text-really-big` and a custom color utility, used like `text-really-red`, we can't tell which is which. We don't guarantee the behavior of that combination, but as of the writing of this paragraph, they will both override the font size.
+
+I highly suggest that you configure your colors file statically if you want to use tails *or* help us figure out a way to make it unnecessary, because I can't think of one :)
+
+## Merging Custom Colors
+
+*IF* you follow the steps outlined in the setup section below, then that is all you need to do for this. *IF NOT* you should set the following configuration if you are using any custom colors, keeping in mind that there are cases we won't be able to tell the difference between currently (as noted above).
+
+```elixir
+config :tails, :fallback_to_colors, true
+```
+
+## Class Name Helpers
+
+When working with LiveViewNative, or in-line-styling emails, for example, you will likely want access to your tailwind colors even though tailwind css is not available.
+
+
+## Setup
+
+To tell tails about your colors, create a `colors.json` file, which you would also reference in your tailwind.config.
 
 Then, `Tails` would define a function for each color.
 

@@ -32,18 +32,15 @@ defmodule Tails.Custom do
         @dark_themes dark_themes || Application.compile_env(otp_app, :dark_themes)
         @themes themes || Application.compile_env(otp_app, :themes)
         @custom_variants Application.compile_env(otp_app, :variants) || []
-        @warn_on_interpolation Application.compile_env(otp_app, :warn_on_interpolation?, true)
+        @fallback_to_colors Application.compile_env(otp_app, :fallback_to_colors) || false
       else
         @colors_file Application.compile_env(otp_app, __MODULE__)[:colors_file]
         @no_merge_classes Application.compile_env(otp_app, __MODULE__)[:no_merge_classes] || []
         @dark_themes dark_themes || Application.compile_env(otp_app, __MODULE__)[:dark_themes]
         @themes themes || Application.compile_env(otp_app, __MODULE__)[:themes]
         @custom_variants Application.compile_env(otp_app, __MODULE__)[:variants] || []
-        @warn_on_interpolation Keyword.get(
-                                 Application.compile_env(otp_app, __MODULE__) || [],
-                                 :warn_on_interpolation?,
-                                 true
-                               )
+        @fallback_to_colors Application.compile_env(otp_app, __MODULE__)[:fallback_to_colors] ||
+                              false
       end
 
       @colors (if @colors_file do
@@ -165,6 +162,7 @@ defmodule Tails.Custom do
       @touch_actions ~w(auto none pan-x pan-left pan-right pan-y pan-up pan-down pinch-zoom manipulation)
       @user_selects ~w(none text all auto)
       @will_change ~w(auto scroll contents transform)
+      @digits ["0", "1", "2", "3", "4", "6", "7", "8", "9"]
 
       @prefixed_with_values [
         will_change: %{prefix: "will-change", values: @will_change},
@@ -182,12 +180,16 @@ defmodule Tails.Custom do
         animate: %{prefix: "animate", values: @animations},
         transition_property: %{prefix: "transition", values: @transition_properties, naked?: true},
         table_layout: %{prefix: "table", values: @table_layouts},
-        border_collapse_mode: %{prefix: "border", values: @border_collapse_modes},
+        border_collapse_mode: %{
+          prefix: "border",
+          values: @border_collapse_modes,
+          no_arbitrary?: true
+        },
         mix_blend_mode: %{prefix: "mix-blend", values: @mix_blend_modes},
         bg_blend_mode: %{prefix: "bg-blend", values: @bg_blend_modes},
         outline_styles: %{prefix: "outline", values: @outline_styles, naked?: true},
         divide_styles: %{prefix: "divide", values: @divide_styles},
-        border_style: %{prefix: "border", values: @border_styles},
+        border_style: %{prefix: "border", values: @border_styles, no_arbitrary?: true},
         word_breaks: %{prefix: "break", values: @word_breaks},
         whitespace: %{prefix: "whitespace", values: @whitespaces},
         text_align: %{prefix: "text", values: @text_alignments, no_arbitrary?: true},
@@ -259,8 +261,8 @@ defmodule Tails.Custom do
         ring_offset_color: %{prefix: "ring-offset"},
         divide_color: %{prefix: "divide"},
         border_color: %{prefix: "border"},
-        border_color_y: %{prefix: "border-y"},
-        border_color_x: %{prefix: "border-x"},
+        border_color_y: %{prefix: "border-y", clears: [:border_color_t, :border_color_b]},
+        border_color_x: %{prefix: "border-x", clears: [:border_color_l, :border_color_r]},
         border_color_t: %{prefix: "border-t"},
         border_color_r: %{prefix: "border-r"},
         border_color_b: %{prefix: "border-b"},
@@ -325,16 +327,7 @@ defmodule Tails.Custom do
         backdrop_invert: %{prefix: "backdrop-invert", naked?: true},
         backdrop_opacity: %{prefix: "backdrop-opacity"},
         border_opacity: %{prefix: "border-opacity"},
-        ring_width: %{prefix: "ring", naked?: true, wont_overwrite: ~w(ring-inset)},
-        rounded_t: %{prefix: "rounded-t", naked?: true},
-        rounded_r: %{prefix: "rounded-r", naked?: true},
-        rounded_b: %{prefix: "rounded-b", naked?: true},
-        rounded_l: %{prefix: "rounded-l", naked?: true},
-        rounded_tl: %{prefix: "rounded-tl", naked?: true},
-        rounded_tr: %{prefix: "rounded-tr", naked?: true},
-        rounded_bl: %{prefix: "rounded-bl", naked?: true},
-        rounded_br: %{prefix: "rounded-br", naked?: true},
-        rounded: %{prefix: "rounded", naked?: true},
+        ring_width: %{prefix: "ring", naked?: true, wont_overwrite: ~w(ring-inset), digits?: true},
         underline_offset: %{prefix: "underline-offset"},
         text_decoration_thickness: %{prefix: "decoration"},
         text_indent: %{prefix: "indent"},
@@ -380,13 +373,24 @@ defmodule Tails.Custom do
       }
 
       @directional [
-        p: %{prefix: "p"},
-        m: %{prefix: "m"},
-        scroll_m: %{prefix: "scroll-m"},
-        scroll_p: %{prefix: "scroll-p"},
-        divide: %{prefix: "divide", dash_suffix?: true},
-        border_width: %{prefix: "border", dash_suffix?: true},
-        border_spacing: %{prefix: "border-spacing", dash_suffix?: true}
+        p: %{prefix: "p", negative?: true, digits?: true},
+        m: %{prefix: "m", negative?: true, digits?: true},
+        rounded: %{prefix: "rounded", naked?: true},
+        scroll_m: %{prefix: "scroll-m", negative?: true, digits?: true},
+        scroll_p: %{prefix: "scroll-p", negative?: true, digits?: true},
+        divide: %{prefix: "divide", dash_suffix?: true, values: ["reverse"], digits?: true},
+        border_width: %{
+          prefix: "border",
+          dash_suffix?: true,
+          negative?: true,
+          digits?: true
+        },
+        border_spacing: %{
+          prefix: "border-spacing",
+          dash_suffix?: true,
+          negative?: true,
+          digits?: true
+        }
       ]
 
       @browser_color_values ~w(
@@ -533,6 +537,23 @@ defmodule Tails.Custom do
         |> to_string()
       end
 
+      @doc "Trims nil values and returns a map"
+      def debug(value) do
+        value =
+          case value do
+            %__MODULE__{} ->
+              value
+
+            value ->
+              classes(value)
+          end
+
+        value
+        |> Map.from_struct()
+        |> Enum.reject(&is_nil(elem(&1, 1)))
+        |> Map.new()
+      end
+
       @doc """
       Builds a class string out of a mixed list of inputs or a string.
 
@@ -604,8 +625,6 @@ defmodule Tails.Custom do
           "bg-red-400"
           iex> merge("grid grid-cols-2 lg:grid-cols-3", "grid-cols-3 lg:grid-cols-4") |> to_string()
           "grid grid-cols-3 lg:grid-cols-4"
-          iex> merge("font-normal text-black hover:text-blue-300", "text-gray-600 dark:text-red-400 font-bold") |> to_string()
-          "text-gray-600 font-bold hover:text-blue-300 dark:text-red-400"
           iex> merge("min-h-2", "min-h-[1rem]") |> to_string()
           "min-h-[1rem]"
           iex> merge("min-w-2", "min-h-[1rem]") |> to_string()
@@ -624,8 +643,6 @@ defmodule Tails.Custom do
           "shadow-inner"
           iex> merge("shadow-lg", "shadow") |> to_string()
           "shadow"
-          iex> merge("bg-gray-50 text-gray-600", "ring-1 ring-inset ring-gray-500/10") |> to_string()
-          "ring-inset ring-gray-500/10 bg-gray-50 text-gray-600 ring-1"
           iex> merge("text-xl", "text-[16px]") |> to_string()
           "text-[16px]"
           iex> merge("text-white", "text-[#000]") |> to_string()
@@ -904,12 +921,22 @@ defmodule Tails.Custom do
             Enum.sort_by(@prefixed_with_colors, fn {_, %{prefix: prefix}} ->
               -String.length(prefix)
             end) do
+        @clears Keyword.new(config[:clears] || [], &{&1, nil})
+        def merge_class(
+              tailwind,
+              unquote(prefix) <> "-" <> "[currentcolor]"
+            ) do
+          struct(tailwind, [{unquote(key), "[currentcolor]"} | @clears])
+        end
+
         for color_prefix <- @browser_color_prefixes do
           def merge_class(
                 tailwind,
                 unquote(prefix) <> "-" <> "[" <> unquote(color_prefix) <> new_value
               ) do
-            Map.put(tailwind, unquote(key), "[#{unquote(color_prefix)}" <> new_value)
+            struct(tailwind, [
+              {unquote(key), "[#{unquote(color_prefix)}" <> new_value} | @clears
+            ])
           end
         end
 
@@ -917,13 +944,13 @@ defmodule Tails.Custom do
           match = "[#{color_value}]"
 
           def merge_class(tailwind, unquote(prefix) <> "-" <> unquote(match)) do
-            Map.put(tailwind, unquote(key), unquote(match))
+            struct(tailwind, [{unquote(key), unquote(match)} | @clears])
           end
         end
 
         def merge_class(tailwind, unquote(prefix) <> "-" <> new_value)
             when new_value in @all_colors do
-          Map.put(tailwind, unquote(key), new_value)
+          struct(tailwind, [{unquote(key), new_value} | @clears])
         end
 
         for {size, colors} <- @colors_by_size do
@@ -933,7 +960,7 @@ defmodule Tails.Custom do
                   "-" <> <<new_value::binary-size(unquote(size))>> <> "/" <> suffix
               )
               when new_value in unquote(colors) do
-            Map.put(tailwind, unquote(key), new_value <> "/" <> suffix)
+            struct(tailwind, [{unquote(key), new_value <> "/" <> suffix} | @clears])
           end
         end
       end
@@ -961,8 +988,15 @@ defmodule Tails.Custom do
           end
         end
 
-        def merge_class(tailwind, unquote(prefix) <> "-" <> new_value) do
-          Map.put(tailwind, unquote(key), new_value)
+        if config[:digits?] do
+          def merge_class(tailwind, unquote(prefix) <> "-" <> <<digit::binary-size(1)>> <> rest)
+              when digit in @digits do
+            Map.put(tailwind, unquote(key), "#{digit}#{rest}")
+          end
+        else
+          def merge_class(tailwind, unquote(prefix) <> "-" <> new_value) do
+            Map.put(tailwind, unquote(key), new_value)
+          end
         end
       end
 
@@ -986,83 +1020,266 @@ defmodule Tails.Custom do
 
           @clears Enum.map(clears, &{&1, nil})
 
-          def merge_class(
-                %{unquote(class) => nil} = tailwind,
-                unquote(string_class) <> unquote(string_dir) <> "-" <> value
-              ) do
-            Map.put(tailwind, unquote(class), struct(Directions, %{unquote(dir) => value}))
+          if config[:values] do
+            @values config[:values]
+            def merge_class(
+                  %{unquote(class) => nil} = tailwind,
+                  unquote(string_class) <>
+                    unquote(string_dir) <> "-" <> value
+                )
+                when value in @values do
+              Map.put(tailwind, unquote(class), struct(Directions, %{unquote(dir) => value}))
+            end
           end
 
-          def merge_class(
-                %{unquote(class) => nil} = tailwind,
-                "-" <> unquote(string_class) <> unquote(string_dir) <> "-" <> value
-              ) do
-            Map.put(tailwind, unquote(class), struct(Directions, %{unquote(dir) => "-" <> value}))
+          unless config[:no_arbitrary?] do
+            def merge_class(
+                  %{unquote(class) => nil} = tailwind,
+                  unquote(string_class) <>
+                    unquote(string_dir) <> "-[" <> rest
+                ) do
+              Map.put(
+                tailwind,
+                unquote(class),
+                struct(Directions, %{unquote(dir) => "[#{rest}"})
+              )
+            end
+
+            def merge_class(
+                  %{unquote(class) => directions} = tailwind,
+                  unquote(string_class) <>
+                    unquote(string_dir) <> "-[" <> rest
+                ) do
+              Map.put(
+                tailwind,
+                unquote(class),
+                struct(directions, [{unquote(dir), "[#{rest}"} | @clears])
+              )
+            end
           end
 
-          def merge_class(
-                %{unquote(class) => directions} = tailwind,
-                unquote(string_class) <> unquote(string_dir) <> "-" <> value
-              ) do
-            Map.put(
-              tailwind,
-              unquote(class),
-              struct(directions, [{unquote(dir), value} | @clears])
-            )
+          if config[:naked?] do
+            def merge_class(
+                  %{unquote(class) => nil} = tailwind,
+                  unquote(string_class) <>
+                    unquote(string_dir)
+                ) do
+              Map.put(
+                tailwind,
+                unquote(class),
+                struct(Directions, %{unquote(dir) => ""})
+              )
+            end
           end
 
-          def merge_class(
-                %{unquote(class) => directions} = tailwind,
-                "-" <> unquote(string_class) <> unquote(string_dir) <> "-" <> value
-              ) do
-            Map.put(
-              tailwind,
-              unquote(class),
-              struct(directions, [{unquote(dir), "-" <> value} | @clears])
-            )
+          if config[:digits?] do
+            def merge_class(
+                  %{unquote(class) => nil} = tailwind,
+                  unquote(string_class) <>
+                    unquote(string_dir) <> "-" <> <<digit::binary-size(1)>> <> rest
+                )
+                when digit in @digits do
+              Map.put(
+                tailwind,
+                unquote(class),
+                struct(Directions, %{unquote(dir) => "#{digit}#{rest}"})
+              )
+            end
+          else
+            def merge_class(
+                  %{unquote(class) => nil} = tailwind,
+                  unquote(string_class) <>
+                    unquote(string_dir) <> "-" <> value
+                ) do
+              Map.put(
+                tailwind,
+                unquote(class),
+                struct(Directions, %{unquote(dir) => value})
+              )
+            end
+          end
+
+          if config[:negative?] do
+            if config[:naked?] do
+              def merge_class(
+                    %{unquote(class) => nil} = tailwind,
+                    "-" <>
+                      unquote(string_class) <>
+                      unquote(string_dir)
+                  ) do
+                Map.put(
+                  tailwind,
+                  unquote(class),
+                  struct(Directions, %{unquote(dir) => "-"})
+                )
+              end
+            end
+
+            def merge_class(
+                  %{unquote(class) => nil} = tailwind,
+                  "-" <> unquote(string_class) <> unquote(string_dir) <> "-" <> value
+                ) do
+              Map.put(
+                tailwind,
+                unquote(class),
+                struct(Directions, %{unquote(dir) => "-" <> value})
+              )
+            end
+          end
+
+          if config[:values] do
+            @values config[:values]
+            def merge_class(
+                  %{unquote(class) => directions} = tailwind,
+                  unquote(string_class) <>
+                    unquote(string_dir) <>
+                    "-" <>
+                    value
+                )
+                when value in @values do
+              Map.put(
+                tailwind,
+                unquote(class),
+                struct(directions, [{unquote(dir), value} | @clears])
+              )
+            end
+          end
+
+          if config[:naked?] do
+            def merge_class(
+                  %{unquote(class) => directions} = tailwind,
+                  unquote(string_class) <>
+                    unquote(string_dir)
+                ) do
+              Map.put(
+                tailwind,
+                unquote(class),
+                struct(directions, [{unquote(dir), ""} | @clears])
+              )
+            end
+          end
+
+          if config[:digits?] do
+            def merge_class(
+                  %{unquote(class) => directions} = tailwind,
+                  unquote(string_class) <>
+                    unquote(string_dir) <> "-" <> <<digit::binary-size(1)>> <> rest
+                )
+                when digit in @digits do
+              Map.put(
+                tailwind,
+                unquote(class),
+                struct(directions, [{unquote(dir), "#{digit}#{rest}"} | @clears])
+              )
+            end
+          else
+            def merge_class(
+                  %{unquote(class) => directions} = tailwind,
+                  unquote(string_class) <>
+                    unquote(string_dir) <> "-" <> value
+                ) do
+              Map.put(
+                tailwind,
+                unquote(class),
+                struct(directions, [{unquote(dir), value} | @clears])
+              )
+            end
+          end
+
+          if config[:negative?] do
+            if config[:naked?] do
+              def merge_class(
+                    %{unquote(class) => directions} = tailwind,
+                    "-" <> unquote(string_class) <> unquote(string_dir)
+                  ) do
+                Map.put(
+                  tailwind,
+                  unquote(class),
+                  struct(directions, [{unquote(dir), "-"} | @clears])
+                )
+              end
+            end
+
+            def merge_class(
+                  %{unquote(class) => directions} = tailwind,
+                  "-" <> unquote(string_class) <> unquote(string_dir) <> "-" <> value
+                ) do
+              Map.put(
+                tailwind,
+                unquote(class),
+                struct(directions, [{unquote(dir), "-" <> value} | @clears])
+              )
+            end
           end
         end
       end
 
-      for {key, %{prefix: prefix} = config} <-
-            Enum.sort_by(@prefixed, fn {_, %{prefix: prefix}} ->
-              -String.length(prefix)
-            end) do
-        if config[:naked?] do
-          def merge_class(tailwind, unquote(prefix)) do
-            Map.put(tailwind, unquote(key), "")
+      for {class, %{prefix: string_class} = config} <- @directional do
+        if config[:values] do
+          @values config[:values]
+          def merge_class(
+                tailwind,
+                unquote(string_class) <> "-" <> value
+              )
+              when value in @values do
+            Map.put(tailwind, unquote(class), %Directions{all: value})
           end
         end
 
         unless config[:no_arbitrary?] do
-          def merge_class(tailwind, unquote(prefix) <> "-" <> "[" <> _ = value_without_suffix) do
-            unquote(prefix) <> "-" <> new_value = value_without_suffix
-            Map.put(tailwind, unquote(key), new_value)
+          def merge_class(
+                tailwind,
+                unquote(string_class) <> "-[" <> rest
+              ) do
+            Map.put(tailwind, unquote(class), %Directions{all: "[#{rest}"})
           end
         end
 
-        def merge_class(tailwind, unquote(prefix) <> "-" <> new_value) do
-          Map.put(tailwind, unquote(key), new_value)
+        if config[:negative?] do
+          if config[:naked?] do
+            def merge_class(tailwind, "-" <> unquote(string_class)) do
+              Map.put(tailwind, unquote(class), %Directions{all: "-"})
+            end
+          end
+
+          def merge_class(tailwind, "-" <> unquote(string_class) <> "-" <> value) do
+            Map.put(tailwind, unquote(class), %Directions{all: "-" <> value})
+          end
+        end
+
+        if config[:naked?] do
+          def merge_class(tailwind, unquote(string_class)) do
+            Map.put(tailwind, unquote(class), %Directions{all: ""})
+          end
+        end
+
+        if config[:digits?] do
+          def merge_class(
+                tailwind,
+                unquote(string_class) <> "-" <> <<digit::binary-size(1)>> <> rest
+              )
+              when digit in @digits do
+            Map.put(tailwind, unquote(class), %Directions{all: "#{digit}#{rest}"})
+          end
+        else
+          def merge_class(
+                tailwind,
+                unquote(string_class) <> "-" <> value
+              ) do
+            Map.put(tailwind, unquote(class), %Directions{all: value})
+          end
         end
       end
 
-      for {class, %{prefix: string_class}} <- @directional do
-        @dirs %{
-          x: [:r, :l],
-          y: [:t, :b],
-          t: [:tl, :tr],
-          r: [:tr, :br],
-          b: [:br, :bl],
-          l: [:tl, :bl]
-        }
+      if @fallback_to_colors do
+        for {key, %{prefix: prefix} = config} <-
+              Enum.sort_by(@prefixed_with_colors, fn {_, %{prefix: prefix}} ->
+                -String.length(prefix)
+              end) do
+          @clears Keyword.new(config[:clears] || [], &{&1, nil})
 
-        for {dir, clears} <- @dirs do
-          def merge_class(tailwind, "-" <> unquote(string_class) <> "-" <> value) do
-            Map.put(tailwind, unquote(class), %Directions{all: "-#{value}"})
-          end
-
-          def merge_class(tailwind, unquote(string_class) <> "-" <> value) do
-            Map.put(tailwind, unquote(class), %Directions{all: value})
+          def merge_class(tailwind, unquote(prefix) <> "-" <> value) do
+            struct(tailwind, [{unquote(key), value} | @clears])
           end
         end
       end
@@ -1236,6 +1453,9 @@ defmodule Tails.Custom do
       end
 
       defp direction(nil, _, _, _, _), do: ""
+
+      defp direction("", suffix, prefix, nil, dash_suffix?),
+        do: [prefix, dash_suffix(suffix, dash_suffix?)]
 
       defp direction("-" <> value, suffix, prefix, nil, dash_suffix?),
         do: [" -", prefix, dash_suffix(suffix, dash_suffix?), "-", value]
