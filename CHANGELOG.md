@@ -5,6 +5,23 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v0.1.9](https://github.com/zachdaniel/tails/compare/v0.1.8...v0.1.9) (2024-02-20)
+
+
+
+
+### Bug Fixes:
+
+* properly merge directional classes with dashes before the directions
+
+* don't sort variants
+
+* various typos and better prefix merging
+
+### Improvements:
+
+* better behavior with unknown custom colors
+
 ## [v0.1.8](https://github.com/zachdaniel/tails/compare/v0.1.7...v0.1.8) (2023-11-21)
 
 
