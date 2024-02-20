@@ -511,14 +511,18 @@ defmodule Tails.Custom do
 
       And then we merge the whole list up into one class string.
 
-      This allows for conditional class rendering, arbitrarily nested. For example:
+      This allows for conditional class rendering, arbitrarily nested.
 
-         iex> classes(["a", "b"])
-         "a b"
-         iex> classes([a: false, b: true])
-         "b"
-         iex> classes([[a: true, b: false], [c: false, d: true]])
-         "a d"
+      ## Examples
+
+          iex> classes(["a", "b"])
+          "a b"
+
+          iex> classes([a: false, b: true])
+          "b"
+
+          iex> classes([[a: true, b: false], [c: false, d: true]])
+          "a d"
       """
       def classes(nil), do: nil
 
