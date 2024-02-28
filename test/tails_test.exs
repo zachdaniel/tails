@@ -131,5 +131,12 @@ defmodule TailsTest do
 
       assert num_of_consolidated_classes == 2
     end
+
+    test "common tailwind digits work" do
+      common_digits =
+        ~w(0 0.5 1 1.5 2 2.5 3 3.5 4 5 6 7 8 9 10 11 12 14 16 20 24 28 32 36 40 44 48 52 56 60 64 72 80 96)
+
+      assert Enum.map(common_digits, &Tails.classes(["p-#{&1}", "p-4"])) |> Enum.uniq() == ["p-4"]
+    end
   end
 end
