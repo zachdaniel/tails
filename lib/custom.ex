@@ -162,7 +162,7 @@ defmodule Tails.Custom do
       @touch_actions ~w(auto none pan-x pan-left pan-right pan-y pan-up pan-down pinch-zoom manipulation)
       @user_selects ~w(none text all auto)
       @will_change ~w(auto scroll contents transform)
-      @digits ["0", "1", "2", "3", "4", "6", "7", "8", "9"]
+      @digits Enum.map(0..9, &to_string/1)
 
       @prefixed_with_values [
         will_change: %{prefix: "will-change", values: @will_change},
