@@ -5,6 +5,17 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v0.1.10](https://github.com/zachdaniel/tails/compare/v0.1.9...v0.1.10) (2024-03-04)
+
+
+
+
+### Bug Fixes:
+
+* include px in numeric scale
+
+* Missing 5 in digits (#18)
+
 ## [v0.1.9](https://github.com/zachdaniel/tails/compare/v0.1.8...v0.1.9) (2024-02-20)
 
 
