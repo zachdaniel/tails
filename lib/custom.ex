@@ -549,7 +549,7 @@ defmodule Tails.Custom do
               value
 
             value ->
-              classes(value)
+              new(value)
           end
 
         value
@@ -656,7 +656,9 @@ defmodule Tails.Custom do
           iex> merge("border-b-4 border-opacity-20") |> to_string()
           "border-b-4 border-opacity-20"
           iex> merge("border-black border-b-4 border-opacity-20") |> to_string()
-          "border-black border-b-4 border-opacity-20"
+          "border-b-4 border-black border-opacity-20"
+          iex> merge("border-2 border-px") |> to_string()
+          "border-px"
 
       Classes can be removed
 
@@ -704,7 +706,7 @@ defmodule Tails.Custom do
 
       @doc "Merges a list of class strings. See `merge/2` for more"
       def merge(list) when is_list(list) do
-        Enum.reduce(list, &merge(&2, &1))
+        Enum.reduce(list, %__MODULE__{}, &merge(&2, &1))
       end
 
       def merge(value) when not is_list(value) do
@@ -993,6 +995,10 @@ defmodule Tails.Custom do
         end
 
         if config[:digits?] do
+          def merge_class(tailwind, unquote(prefix) <> "-px") do
+            Map.put(tailwind, unquote(key), "px")
+          end
+
           def merge_class(tailwind, unquote(prefix) <> "-" <> <<digit::binary-size(1)>> <> rest)
               when digit in @digits do
             Map.put(tailwind, unquote(key), "#{digit}#{rest}")
@@ -1077,6 +1083,18 @@ defmodule Tails.Custom do
           end
 
           if config[:digits?] do
+            def merge_class(
+                  %{unquote(class) => nil} = tailwind,
+                  unquote(string_class) <>
+                    unquote(string_dir) <> "-px"
+                ) do
+              Map.put(
+                tailwind,
+                unquote(class),
+                struct(Directions, %{unquote(dir) => "px"})
+              )
+            end
+
             def merge_class(
                   %{unquote(class) => nil} = tailwind,
                   unquote(string_class) <>
@@ -1258,6 +1276,13 @@ defmodule Tails.Custom do
         end
 
         if config[:digits?] do
+          def merge_class(
+                tailwind,
+                unquote(string_class) <> "-px"
+              ) do
+            Map.put(tailwind, unquote(class), %Directions{all: "px"})
+          end
+
           def merge_class(
                 tailwind,
                 unquote(string_class) <> "-" <> <<digit::binary-size(1)>> <> rest
