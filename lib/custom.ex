@@ -28,6 +28,7 @@ defmodule Tails.Custom do
 
       if otp_app == :tails do
         @colors_file Application.compile_env(otp_app, :colors_file)
+        @color_classes Application.compile_env(otp_app, :color_classes) || []
         @no_merge_classes Application.compile_env(otp_app, :no_merge_classes) || []
         @dark_themes dark_themes || Application.compile_env(otp_app, :dark_themes)
         @themes themes || Application.compile_env(otp_app, :themes)
@@ -35,6 +36,7 @@ defmodule Tails.Custom do
         @fallback_to_colors Application.compile_env(otp_app, :fallback_to_colors) || false
       else
         @colors_file Application.compile_env(otp_app, __MODULE__)[:colors_file]
+        @color_classes Application.compile_env(otp_app, __MODULE__)[:color_classes] || []
         @no_merge_classes Application.compile_env(otp_app, __MODULE__)[:no_merge_classes] || []
         @dark_themes dark_themes || Application.compile_env(otp_app, __MODULE__)[:dark_themes]
         @themes themes || Application.compile_env(otp_app, __MODULE__)[:themes]
@@ -57,7 +59,7 @@ defmodule Tails.Custom do
                  Tails.Colors.builtin_colors()
                end)
 
-      @all_colors Tails.Colors.all_color_classes(@colors)
+      @all_colors Tails.Colors.all_color_classes(@colors) ++ @color_classes
 
       @colors_by_size @all_colors |> Enum.group_by(&byte_size/1)
 

@@ -1,6 +1,6 @@
 # Tails
 
-Tails is a small set of utilities around working with tailwind class lists in Elixir. 
+Tails is a small set of utilities around working with tailwind class lists in Elixir.
 
 # Utilities
 
@@ -54,7 +54,22 @@ We use custom defined colors for two things:
 
 If you *don't* do this, there are certain cases that we are currently unable to disambiguate. For example, if you have a custom font size utility, i.e `text-really-big` and a custom color utility, used like `text-really-red`, we can't tell which is which. We don't guarantee the behavior of that combination, but as of the writing of this paragraph, they will both override the font size.
 
-I highly suggest that you configure your colors file statically if you want to use tails *or* help us figure out a way to make it unnecessary, because I can't think of one :)
+I highly suggest that you configure your colors file statically, or configure your colors by hand as explained below if you want to use tails *or* help us figure out a way to make it unnecessary, because I can't think of one :)
+
+## Configuring custom colors without a colors file
+
+You can configure custom colors without a colors file by setting the following configuration:
+
+```elixir
+config :tails, :color_classes, ["primary", "secondary", ...]
+```
+
+or if using a custom tails module
+
+```elixir
+config :my_app, Tails,
+  color_classes: ["primary", "secondary", ...]
+```
 
 ## Merging Custom Colors
 
