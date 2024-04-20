@@ -1488,7 +1488,7 @@ defmodule Tails.Custom do
       defp direction(nil, _, _, _, _), do: ""
 
       defp direction("", suffix, prefix, nil, dash_suffix?),
-        do: [prefix, dash_suffix(suffix, dash_suffix?)]
+        do: [" ", prefix, dash_suffix(suffix, dash_suffix?)]
 
       defp direction("-" <> value, suffix, prefix, nil, dash_suffix?),
         do: [" -", prefix, dash_suffix(suffix, dash_suffix?), "-", value]
