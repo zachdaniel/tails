@@ -641,6 +641,8 @@ defmodule Tails.Custom do
           "rounded"
           iex> merge("rounded", "rounded-lg") |> to_string()
           "rounded-lg"
+          iex> merge("rounded", "px-2") |> to_string()
+          "px-2 rounded"
           iex> merge("border-separate", "border-spacing-1") |> to_string()
           "border-spacing-1 border-separate"
           iex> merge("shadow", "shadow-md") |> to_string()
