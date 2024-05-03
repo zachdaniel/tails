@@ -5,6 +5,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v0.1.11](https://github.com/zachdaniel/tails/compare/v0.1.10...v0.1.11) (2024-05-03)
+
+
+
+
+### Improvements:
+
+* support `color_classes` config
+
 ## [v0.1.10](https://github.com/zachdaniel/tails/compare/v0.1.9...v0.1.10) (2024-03-04)
 
 
