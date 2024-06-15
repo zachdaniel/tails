@@ -338,6 +338,7 @@ defmodule Tails.Custom do
         gap_x: %{prefix: "gap-x"},
         gap_y: %{prefix: "gap-y"},
         order: %{prefix: "order"},
+        opacity: %{prefix: "opacity"},
         basis: %{prefix: "basis"},
         space_x: %{prefix: "space-x"},
         space_y: %{prefix: "space-y"},
@@ -476,6 +477,7 @@ defmodule Tails.Custom do
                     classes: MapSet.new(),
                     variants: %{},
                     variant: nil,
+                    style: %{},
                     fallback: :default,
                     theme: :default
                   ]
@@ -558,6 +560,19 @@ defmodule Tails.Custom do
         |> Map.from_struct()
         |> Enum.reject(&is_nil(elem(&1, 1)))
         |> Map.new()
+        |> case do
+          %{variants: variants} = debug ->
+            Map.put(
+              debug,
+              :variants,
+              Map.new(variants, fn {k, %__MODULE__{} = value} ->
+                {k, debug(value)}
+              end)
+            )
+
+          other ->
+            other
+        end
       end
 
       @doc """
@@ -868,23 +883,56 @@ defmodule Tails.Custom do
         end
       end
 
+      def merge_class(tailwind, "[" <> custom_css = class) do
+        case Tails.Custom.parse_to_closing(custom_css) do
+          {:modifier, modifier, rest} ->
+            Map.update!(tailwind, :variants, fn variants ->
+              variant =
+                case tailwind.variant do
+                  nil -> modifier
+                  existing -> "#{existing}:#{modifier}"
+                end
+
+              case Map.fetch(variants, modifier) do
+                {:ok, existing_variants} ->
+                  Map.put(variants, modifier, merge_class(existing_variants, rest))
+
+                :error ->
+                  Map.put(variants, modifier, merge_class(%__MODULE__{variant: variant}, rest))
+              end
+            end)
+            |> Tails.Custom.collapse_variants(__MODULE__)
+
+          {:css, key, value} ->
+            Map.update!(tailwind, :style, &Map.put(&1, key, value))
+
+          _ ->
+            Map.put(tailwind, :classes, MapSet.put(tailwind.classes, class))
+        end
+      end
+
       for modifier <- @variants do
         def merge_class(tailwind, unquote(modifier) <> ":" <> rest) do
-          rest = String.split(rest, ":")
-          last = List.last(rest)
-          variants = :lists.droplast(rest)
+          Map.update!(tailwind, :variants, fn variants ->
+            variant =
+              case tailwind.variant do
+                nil -> unquote(modifier)
+                existing -> "#{existing}:#{unquote(modifier)}"
+              end
 
-          key = [unquote(modifier) | variants]
+            case Map.fetch(variants, unquote(modifier)) do
+              {:ok, existing_variants} ->
+                Map.put(variants, unquote(modifier), merge_class(existing_variants, rest))
 
-          if Map.has_key?(tailwind.variants, key) do
-            %{tailwind | variants: Map.update!(tailwind.variants, key, &merge_class(&1, last))}
-          else
-            %{
-              tailwind
-              | variants:
-                  Map.put(tailwind.variants, key, %{new(last) | variant: Enum.join(key, ":")})
-            }
-          end
+              :error ->
+                Map.put(
+                  variants,
+                  unquote(modifier),
+                  merge_class(%__MODULE__{variant: variant}, rest)
+                )
+            end
+          end)
+          |> Tails.Custom.collapse_variants(__MODULE__)
         end
       end
 
@@ -1318,7 +1366,32 @@ defmodule Tails.Custom do
       end
 
       def merge_class(tailwind, class) do
-        %{tailwind | classes: MapSet.put(tailwind.classes, class)}
+        case Tails.Custom.parse_modifier(class) do
+          {:modifier, modifier, rest} ->
+            Map.update!(tailwind, :variants, fn variants ->
+              variant =
+                case tailwind.variant do
+                  nil -> modifier
+                  existing -> "#{existing}:#{modifier}"
+                end
+
+              case Map.fetch(variants, modifier) do
+                {:ok, existing_variants} ->
+                  Map.put(variants, modifier, merge_class(existing_variants, rest))
+
+                :error ->
+                  Map.put(
+                    variants,
+                    modifier,
+                    merge_class(%__MODULE__{variant: variant}, rest)
+                  )
+              end
+            end)
+            |> Tails.Custom.collapse_variants(__MODULE__)
+
+          :error ->
+            %{tailwind | classes: MapSet.put(tailwind.classes, class)}
+        end
       end
 
       @doc """
@@ -1347,6 +1420,7 @@ defmodule Tails.Custom do
                   Map.put(tailwind.variants, key, %{new(last) | variant: Enum.join(key, ":")})
             }
           end
+          |> Tails.Custom.collapse_variants(__MODULE__)
         end
       end
 
@@ -1397,6 +1471,7 @@ defmodule Tails.Custom do
         ]
         |> add_variants(tailwind)
         |> add_classes(tailwind, tailwind.variant)
+        |> add_css(tailwind, tailwind.variant)
       end
 
       defp add_variants(iodata, tailwind) do
@@ -1409,6 +1484,39 @@ defmodule Tails.Custom do
             to_iodata(value)
           end)
         ]
+      end
+
+      defp add_css(iodata, tailwind, variant) do
+        style_classes =
+          case variant do
+            nil ->
+              tailwind.style
+              # giving it a stable sort makes testing significantly easier
+              # but may have non-negligable performance impacts?
+              |> Enum.sort_by(&elem(&1, 0))
+              |> Enum.map(fn {key, value} ->
+                "[#{key}:#{value}]"
+              end)
+              |> Enum.intersperse(" ")
+
+            variant ->
+              tailwind.style
+              # giving it a stable sort makes testing significantly easier
+              # but may have non-negligable performance impacts?
+              |> Enum.sort_by(&elem(&1, 0))
+              |> Enum.map(fn {key, value} ->
+                "#{variant}:[#{key}:#{value}]"
+              end)
+              |> Enum.intersperse(" ")
+          end
+
+        case style_classes do
+          [] ->
+            iodata
+
+          classes ->
+            [iodata, " ", classes]
+        end
       end
 
       defp add_classes(iodata, tailwind, variant) do
@@ -1534,22 +1642,6 @@ defmodule Tails.Custom do
           unquote(value)
         end
       end
-
-      # for {key, value} when is_map(value) <- @colors do
-      #   for {suffix, value} when is_binary(value) <- value do
-      #     if suffix == "DEFAULT" do
-      #       # sobelow_skip ["DOS.BinToAtom"]
-      #       def unquote(:"#{String.replace(key, "-", "_")}")() do
-      #         unquote(value)
-      #       end
-      #     else
-      #       # sobelow_skip ["DOS.BinToAtom"]
-      #       def unquote(:"#{String.replace(key, "-", "_")}_#{String.replace(suffix, "-", "_")}")() do
-      #         unquote(value)
-      #       end
-      #     end
-      #   end
-      # end
     end
   end
 
@@ -1566,4 +1658,101 @@ defmodule Tails.Custom do
 
   defp add_to_prefix("", value), do: to_string(value)
   defp add_to_prefix(prefix, value), do: to_string(prefix) <> "-" <> to_string(value)
+
+  @doc false
+  def parse_modifier(string, open_count \\ 0, trail \\ "")
+  def parse_modifier(":", _, _), do: :error
+  def parse_modifier(":" <> rest, 0, trail), do: {:modifier, String.reverse(trail), rest}
+  def parse_modifier("[" <> rest, n, trail), do: parse_modifier(rest, n + 1, "[" <> trail)
+  def parse_modifier("]" <> rest, n, trail), do: parse_modifier(rest, n - 1, "]" <> trail)
+
+  def parse_modifier("", _n, _trail), do: :error
+
+  def parse_modifier(<<c::binary-size(1)>> <> rest, n, trail),
+    do: parse_modifier(rest, n, c <> trail)
+
+  @doc false
+  # not a fan of this
+  def collapse_variants(%{variants: variants} = tails, _mod) when variants == %{}, do: tails
+
+  def collapse_variants(%{variants: variants} = tails, mod) do
+    variant_paths =
+      variant_paths(variants)
+
+    variant_paths
+    |> Enum.sort_by(&Enum.count/1)
+    |> Enum.reduce(%{tails | variants: %{}}, fn path, new_tails ->
+      new_path = Enum.sort(path)
+
+      variant =
+        case tails.variant do
+          nil -> Enum.join(new_path, ":")
+          variant -> "#{variant}:#{Enum.join(new_path, ":")}"
+        end
+
+      put_variants(new_tails, new_path, variant, get_variants(tails, path), mod)
+    end)
+  end
+
+  def put_variants(tails, [], variant, nested_tails, mod) do
+    %{
+      mod.merge(
+        %{tails | variant: nil, variants: %{}},
+        %{
+          nested_tails
+          | variant: nil,
+            variants: %{}
+        }
+      )
+      | variant: variant
+    }
+  end
+
+  def put_variants(tails, [key | rest], variant, nested_tails, mod) do
+    Map.update!(tails, :variants, fn variants ->
+      variants
+      |> Map.put_new(key, struct!(mod))
+      |> Map.update!(key, &put_variants(&1, rest, variant, nested_tails, mod))
+    end)
+  end
+
+  def get_variants(tails, []), do: tails
+
+  def get_variants(tails, [key | rest]) do
+    get_variants(tails.variants[key], rest)
+  end
+
+  defp variant_paths(variants) do
+    Enum.flat_map(variants, fn {key, value} ->
+      [[key]] ++
+        Enum.map(variant_paths(value.variants), fn path -> [key | path] end)
+    end)
+  end
+
+  @doc false
+  def parse_to_closing(text, open_count \\ 1, trail \\ "")
+
+  def parse_to_closing("]", 1, trail) do
+    case String.split(String.reverse(trail), ":", parts: 2) do
+      [key, value] -> {:css, key, value}
+      _ -> :error
+    end
+  end
+
+  def parse_to_closing("]:" <> rest, 1, trail) do
+    {:modifier, "[" <> String.reverse(trail) <> "]", rest}
+  end
+
+  def parse_to_closing("[" <> rest, n, trail) do
+    parse_to_closing(rest, n + 1, "[" <> trail)
+  end
+
+  def parse_to_closing("]" <> rest, n, trail) do
+    parse_to_closing(rest, n - 1, "]" <> trail)
+  end
+
+  def parse_to_closing(<<c::binary-size(1)>> <> rest, n, trail),
+    do: parse_to_closing(rest, n, c <> trail)
+
+  def parse_to_closing(_, _, _), do: :error
 end
