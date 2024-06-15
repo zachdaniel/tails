@@ -7,7 +7,7 @@ Tails is a small set of utilities around working with tailwind class lists in El
 I do not have the time to actively maintain tails at this point. There are some issues that need to be addressed and were highlighted in this thread:
 https://elixirforum.com/t/turboprop-toolkit-to-create-accessible-component-libraries/64228
 
-If you are interested in taking over the project, please reach out to me on the forum or on github.
+If you are interested in taking over the project, please reach out to me on the forum or on github. See the `wip-fixes` branch for some updates and failing tests: https://github.com/zachdaniel/tails/tree/wip-fixes
 
 For all others, I suggest using other tools, like turboprop which has a tailwind class merger: https://github.com/leuchtturm-dev/turboprop
 
