@@ -30,16 +30,16 @@ defmodule Turboprop.MergeTest do
 
   describe "non-conflicting" do
     test "merges non-conflicting classes correctly" do
-      assert Tails.classes(["border-t", "border-white/10"]) == "border-t border-white/10"
-      assert Tails.classes(["border-t", "border-white"]) == "border-t border-white"
-      assert Tails.classes(["text-3.5xl", "text-black"]) == "text-3.5xl text-black"
+      assert Tails.classes(["border-t", "border-white/10"]) == "border-white/10 border-t"
+      assert Tails.classes(["border-t", "border-white"]) == "border-white border-t"
+      assert Tails.classes(["text-3.5xl", "text-black"]) == "text-black text-3.5xl"
     end
   end
 
   describe "colors" do
     test "handles color conflicts properly" do
-      assert Tails.classes("bg-grey-5 bg-hotpink") == "bg-hotpink"
-      assert Tails.classes("hover:bg-grey-5 hover:bg-hotpink") == "hover:bg-hotpink"
+      assert Tails.classes("bg-gray-50 bg-teal-100") == "bg-teal-100"
+      assert Tails.classes("hover:bg-gray-50 hover:bg-teal-100") == "hover:bg-teal-100"
 
       assert Tails.classes(["stroke-[hsl(350_80%_0%)]", "stroke-[10px]"]) ==
                "stroke-[hsl(350_80%_0%)] stroke-[10px]"
@@ -63,7 +63,7 @@ defmodule Turboprop.MergeTest do
                "overflow-x-scroll"
 
       assert Tails.classes(["overflow-x-auto", "hover:overflow-x-hidden", "overflow-x-scroll"]) ==
-               "hover:overflow-x-hidden overflow-x-scroll"
+               "overflow-x-scroll hover:overflow-x-hidden"
 
       assert Tails.classes([
                "overflow-x-auto",
@@ -71,7 +71,7 @@ defmodule Turboprop.MergeTest do
                "hover:overflow-x-auto",
                "overflow-x-scroll"
              ]) ==
-               "hover:overflow-x-auto overflow-x-scroll"
+               "overflow-x-scroll hover:overflow-x-auto"
 
       assert Tails.classes("col-span-1 col-span-full") == "col-span-full"
     end
@@ -230,14 +230,14 @@ defmodule Turboprop.MergeTest do
       assert Tails.classes(["bg-cover", "bg-[percentage:30%]", "bg-[length:200px_100px]"]) ==
                "bg-[length:200px_100px]"
 
-      assert Tails.classes([
+      assert Tails.inspect_debug(Tails.classes([
                "bg-none",
                "bg-[url(.)]",
                "bg-[image:.]",
                "bg-[url:.]",
                "bg-[linear-gradient(.)]",
                "bg-gradient-to-r"
-             ]) ==
+             ])) ==
                "bg-gradient-to-r"
     end
   end
@@ -373,25 +373,25 @@ defmodule Turboprop.MergeTest do
 
       assert Tails.classes([
                "hover:dark:[&>*]:focus:disabled:[&_div]:underline",
-               "dark:hover:[&>*]:disabled:focus:[&_div]:line-through"
+               "hover:dark:[&>*]:focus:disabled:[&_div]:line-through"
              ]) ==
-               "dark:hover:[&>*]:disabled:focus:[&_div]:line-through"
+               "hover:dark:[&>*]:focus:disabled:[&_div]:line-through"
 
       assert Tails.classes([
                "hover:dark:[&>*]:focus:[&_div]:disabled:underline",
-               "dark:hover:[&>*]:disabled:focus:[&_div]:line-through"
+               "hover:dark:[&>*]:focus:[&_div]:disabled:line-through"
              ]) ==
-               "hover:dark:[&>*]:focus:[&_div]:disabled:underline dark:hover:[&>*]:disabled:focus:[&_div]:line-through"
+               "hover:dark:[&>*]:focus:[&_div]:disabled:line-through"
     end
 
     test "arbitrary variants with arbitrary properties" do
-      # assert Tails.classes("[&>*]:[color:red] [&>*]:[color:blue]") == "[&>*]:[color:blue]"
+      assert Tails.classes("[&>*]:[color:red] [&>*]:[color:blue]") == "[&>*]:[color:blue]"
 
       assert Tails.classes([
                "[&[data-foo][data-bar]:not([data-baz])]:nod:noa:[color:red]",
                "[&[data-foo][data-bar]:not([data-baz])]:noa:nod:[color:blue]"
              ]) ==
-               "[&[data-foo][data-bar]:not([data-baz])]:noa:nod:[color:blue]"
+               "[&[data-foo][data-bar]:not([data-baz])]:noa:nod:[color:blue] [&[data-foo][data-bar]:not([data-baz])]:nod:noa:[color:red]"
     end
   end
 

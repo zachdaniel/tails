@@ -242,18 +242,19 @@ defmodule Tails.Custom do
         font_weight: %{prefix: "font", values: @font_weights},
         aspect_ratio: %{prefix: "aspect", values: @aspect_ratios},
         outline_style: %{prefix: "outline", values: @outline_styles, naked?: true},
+        bg_image: %{prefix: "bg", values: @bg_images, image?: true},
         bg_size: %{prefix: "bg", values: @bg_sizes},
         bg_repeat: %{prefix: "bg", values: @bg_repeats},
         bg_positions: %{prefix: "bg", values: @bg_positions},
         bg_blend: %{prefix: "bg-blend", values: @bg_blends},
         bg_origin: %{prefix: "bg-origin", values: @bg_origins},
         bg_clip: %{prefix: "bg-clip", values: @bg_clips},
-        bg_image: %{prefix: "bg", values: @bg_images},
         bg_attachment: %{prefix: "bg", values: @bg_attachments},
         col: %{prefix: "col", values: ~w(auto)}
       ]
 
       @prefixed_with_colors [
+        stroke_color: %{prefix: "stroke"},
         fill_color: %{prefix: "fill"},
         outline_color: %{prefix: "outline"},
         caret_color: %{prefix: "caret"},
@@ -297,7 +298,7 @@ defmodule Tails.Custom do
                   |> Enum.map(&String.to_atom/1)
 
       @prefixed [
-        stroke_width: %{prefix: "stroke"},
+        stroke_width: %{prefix: "stroke", digits?: true},
         rotate: %{prefix: "rotate"},
         translate: %{prefix: "translate"},
         translate_x: %{prefix: "translate-x"},
@@ -343,10 +344,6 @@ defmodule Tails.Custom do
         space_x: %{prefix: "space-x"},
         space_y: %{prefix: "space-y"},
         z: %{prefix: "z"},
-        left: %{prefix: "left"},
-        right: %{prefix: "right"},
-        top: %{prefix: "top"},
-        bottom: %{prefix: "bottom"},
         inset: %{prefix: "inset"},
         inset_y: %{prefix: "inset-y"},
         inset_x: %{prefix: "inset-x"},
@@ -377,7 +374,11 @@ defmodule Tails.Custom do
 
       @directional [
         p: %{prefix: "p", negative?: true, digits?: true},
-        m: %{prefix: "m", negative?: true, digits?: true},
+        m: %{prefix: "m", negative?: true, digits?: true, values: ["auto"]},
+        left: %{prefix: "left", negative?: true},
+        right: %{prefix: "right", negative?: true},
+        top: %{prefix: "top", negative?: true},
+        bottom: %{prefix: "bottom", negative?: true},
         rounded: %{prefix: "rounded", naked?: true},
         scroll_m: %{prefix: "scroll-m", negative?: true, digits?: true},
         scroll_p: %{prefix: "scroll-p", negative?: true, digits?: true},
@@ -415,6 +416,7 @@ defmodule Tails.Custom do
       )
 
       @browser_color_prefixes ~w[# rgb( rgba( hsl( hsla(]
+      @browser_image_prefixes ~w[linear-gradient( inherit initial revert revert-layer unset]
 
       @moduledoc """
       Tailwind class utilities like class merging.
@@ -573,6 +575,12 @@ defmodule Tails.Custom do
           other ->
             other
         end
+      end
+
+      def inspect_debug(value) do
+        IO.puts(inspect(debug(value), pretty: true))
+
+        value
       end
 
       @doc """
@@ -901,7 +909,6 @@ defmodule Tails.Custom do
                   Map.put(variants, modifier, merge_class(%__MODULE__{variant: variant}, rest))
               end
             end)
-            |> Tails.Custom.collapse_variants(__MODULE__)
 
           {:css, key, value} ->
             Map.update!(tailwind, :style, &Map.put(&1, key, value))
@@ -932,7 +939,6 @@ defmodule Tails.Custom do
                 )
             end
           end)
-          |> Tails.Custom.collapse_variants(__MODULE__)
         end
       end
 
@@ -949,6 +955,16 @@ defmodule Tails.Custom do
         if config[:naked?] do
           def merge_class(tailwind, unquote(prefix)) do
             Map.put(tailwind, unquote(key), "")
+          end
+        end
+
+        if config[:image?] do
+          for image_prefix <- @browser_image_prefixes do
+            match = "[#{image_prefix}"
+
+            def merge_class(tailwind, unquote(prefix) <> "-" <> unquote(match) <> rest) do
+              struct(tailwind, [{unquote(key), unquote(match) <> rest} | @clears])
+            end
           end
         end
 
@@ -972,8 +988,6 @@ defmodule Tails.Custom do
           Map.put(tailwind, unquote(key), new_value)
         end
       end
-
-      @one_through_one_hundred 1..100 |> Enum.map(&to_string/1) |> Enum.take(11)
 
       for {key, %{prefix: prefix} = config} <-
             Enum.sort_by(@prefixed_with_colors, fn {_, %{prefix: prefix}} ->
@@ -1387,7 +1401,6 @@ defmodule Tails.Custom do
                   )
               end
             end)
-            |> Tails.Custom.collapse_variants(__MODULE__)
 
           :error ->
             %{tailwind | classes: MapSet.put(tailwind.classes, class)}
@@ -1405,22 +1418,21 @@ defmodule Tails.Custom do
 
       for modifier <- @variants do
         def remove(tailwind, unquote(modifier) <> ":" <> rest) do
-          rest = String.split(rest, ":")
-          last = List.last(rest)
-          variants = :lists.droplast(rest)
-
-          key = Enum.sort([unquote(modifier) | variants])
-
-          if Map.has_key?(tailwind.variants, key) do
-            %{tailwind | variants: Map.update!(tailwind.variants, key, &remove(&1, last))}
-          else
-            %{
+          case Tails.Custom.parse_modifier(rest) do
+            :error ->
               tailwind
-              | variants:
-                  Map.put(tailwind.variants, key, %{new(last) | variant: Enum.join(key, ":")})
-            }
+
+            {:modifier, modifier, rest} ->
+              Map.update!(tailwind, :variants, fn variants ->
+                case Map.fetch(variants, modifier) do
+                  {:ok, existing_variants} ->
+                    Map.put(variants, modifier, remove(existing_variants, rest))
+
+                  :error ->
+                    variants
+                end
+              end)
           end
-          |> Tails.Custom.collapse_variants(__MODULE__)
         end
       end
 
@@ -1670,64 +1682,6 @@ defmodule Tails.Custom do
 
   def parse_modifier(<<c::binary-size(1)>> <> rest, n, trail),
     do: parse_modifier(rest, n, c <> trail)
-
-  @doc false
-  # not a fan of this
-  def collapse_variants(%{variants: variants} = tails, _mod) when variants == %{}, do: tails
-
-  def collapse_variants(%{variants: variants} = tails, mod) do
-    variant_paths =
-      variant_paths(variants)
-
-    variant_paths
-    |> Enum.sort_by(&Enum.count/1)
-    |> Enum.reduce(%{tails | variants: %{}}, fn path, new_tails ->
-      new_path = Enum.sort(path)
-
-      variant =
-        case tails.variant do
-          nil -> Enum.join(new_path, ":")
-          variant -> "#{variant}:#{Enum.join(new_path, ":")}"
-        end
-
-      put_variants(new_tails, new_path, variant, get_variants(tails, path), mod)
-    end)
-  end
-
-  def put_variants(tails, [], variant, nested_tails, mod) do
-    %{
-      mod.merge(
-        %{tails | variant: nil, variants: %{}},
-        %{
-          nested_tails
-          | variant: nil,
-            variants: %{}
-        }
-      )
-      | variant: variant
-    }
-  end
-
-  def put_variants(tails, [key | rest], variant, nested_tails, mod) do
-    Map.update!(tails, :variants, fn variants ->
-      variants
-      |> Map.put_new(key, struct!(mod))
-      |> Map.update!(key, &put_variants(&1, rest, variant, nested_tails, mod))
-    end)
-  end
-
-  def get_variants(tails, []), do: tails
-
-  def get_variants(tails, [key | rest]) do
-    get_variants(tails.variants[key], rest)
-  end
-
-  defp variant_paths(variants) do
-    Enum.flat_map(variants, fn {key, value} ->
-      [[key]] ++
-        Enum.map(variant_paths(value.variants), fn path -> [key | path] end)
-    end)
-  end
 
   @doc false
   def parse_to_closing(text, open_count \\ 1, trail \\ "")

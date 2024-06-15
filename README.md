@@ -11,6 +11,11 @@ If you are interested in taking over the project, please reach out to me on the 
 
 For all others, I suggest using other tools, like turboprop which has a tailwind class merger: https://github.com/leuchtturm-dev/turboprop
 
+Things that need to be addressed:
+
+1. Support for `!` class prefix
+2. Certain semantic merges are being done incorrectly.
+
 # Utilities
 
 ## Classes
