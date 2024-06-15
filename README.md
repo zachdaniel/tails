@@ -2,6 +2,15 @@
 
 Tails is a small set of utilities around working with tailwind class lists in Elixir.
 
+## NOTICE
+
+I do not have the time to actively maintain tails at this point. There are some issues that need to be addressed and were highlighted in this thread:
+https://elixirforum.com/t/turboprop-toolkit-to-create-accessible-component-libraries/64228
+
+If you are interested in taking over the project, please reach out to me on the forum or on github.
+
+For all others, I suggest using other tools, like turboprop which has a tailwind class merger: https://github.com/leuchtturm-dev/turboprop
+
 # Utilities
 
 ## Classes
@@ -22,6 +31,7 @@ Class lists are merged from right to left (i.e left is the base, right is the ov
 Merge takes a list of classes and semantically merges any tailwind classes it knows about, leaving the rest untouched. The first argument is treated as a base, and the second argument is treated as overrides.
 
 For example
+
 ```elixir
 iex> merge("p-4", "p-2") |> to_string()
 "p-2"
@@ -52,9 +62,9 @@ We use custom defined colors for two things:
 1. providing class name helpers for use in other contexts
 2. merging custom color values, for example so that we know that adding `bg-specialred` should remove `bg-specialblue`.
 
-If you *don't* do this, there are certain cases that we are currently unable to disambiguate. For example, if you have a custom font size utility, i.e `text-really-big` and a custom color utility, used like `text-really-red`, we can't tell which is which. We don't guarantee the behavior of that combination, but as of the writing of this paragraph, they will both override the font size.
+If you _don't_ do this, there are certain cases that we are currently unable to disambiguate. For example, if you have a custom font size utility, i.e `text-really-big` and a custom color utility, used like `text-really-red`, we can't tell which is which. We don't guarantee the behavior of that combination, but as of the writing of this paragraph, they will both override the font size.
 
-I highly suggest that you configure your colors file statically, or configure your colors by hand as explained below if you want to use tails *or* help us figure out a way to make it unnecessary, because I can't think of one :)
+I highly suggest that you configure your colors file statically, or configure your colors by hand as explained below if you want to use tails _or_ help us figure out a way to make it unnecessary, because I can't think of one :)
 
 ## Configuring custom colors without a colors file
 
@@ -73,7 +83,7 @@ config :my_app, Tails,
 
 ## Merging Custom Colors
 
-*IF* you follow the steps outlined in the setup section below, then that is all you need to do for this. *IF NOT* you should set the following configuration if you are using any custom colors, keeping in mind that there are cases we won't be able to tell the difference between currently (as noted above).
+_IF_ you follow the steps outlined in the setup section below, then that is all you need to do for this. _IF NOT_ you should set the following configuration if you are using any custom colors, keeping in mind that there are cases we won't be able to tell the difference between currently (as noted above).
 
 ```elixir
 config :tails, :fallback_to_colors, true
@@ -82,7 +92,6 @@ config :tails, :fallback_to_colors, true
 ## Class Name Helpers
 
 When working with LiveViewNative, or in-line-styling emails, for example, you will likely want access to your tailwind colors even though tailwind css is not available.
-
 
 ## Setup
 
@@ -103,9 +112,9 @@ module.exports = {
   darkMode: "class",
   theme: {
     extend: {
-      colors: require("./tailwind.colors.json")
+      colors: require("./tailwind.colors.json"),
     },
-  }
+  },
 };
 ```
 
